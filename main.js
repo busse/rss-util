@@ -49,6 +49,11 @@ ipcMain.handle('navigate-to', (event, file) => {
   return { success: false, error: 'Window not found' };
 });
 
+// Get app version
+ipcMain.handle('get-app-version', async () => {
+  return { success: true, version: appVersion };
+});
+
 // Generic JSON file operations
 ipcMain.handle('read-json', async (event, filename) => {
   const filePath = path.join(dataDir, filename);

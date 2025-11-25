@@ -1,6 +1,6 @@
 {
   "name": "rss-util",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An RSS reader designed for maximum utility",
   "main": "main.js",
   "scripts": {

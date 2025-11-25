@@ -67,5 +67,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('update-downloaded');
     ipcRenderer.removeAllListeners('update-progress');
     ipcRenderer.removeAllListeners('update-error');
-  }
+  },
+  
+  // Get app version
+  getAppVersion: () => ipcRenderer.invoke('get-app-version')
 });

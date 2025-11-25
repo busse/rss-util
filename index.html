@@ -619,6 +619,10 @@
       </ul>
     </div>
     <div class="sidebar-footer">
+      <button class="about-btn" id="helpBtn">
+        <span>❓</span>
+        <span>Help</span>
+      </button>
       <button class="about-btn" id="aboutBtn">
         <span>ℹ️</span>
         <span>About</span>
@@ -644,6 +648,53 @@
   </main>
 
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay hidden" id="helpModal">
+    <div class="modal" style="width: 600px; max-height: 80vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3 class="modal-title">Help</h3>
+        <button class="modal-close" id="closeHelpModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="about-info" id="helpInfo">
+          <div class="about-info-item">
+            <div class="about-info-label">Using the App</div>
+            <div class="about-info-value" style="line-height: 1.6;">
+              <p><strong>Adding Feeds:</strong> Click the "Manage" button in the sidebar, then click "+ Add Feed" to subscribe to RSS feeds.</p>
+              <p><strong>Organizing Feeds:</strong> Create categories/folders in the Feed Management page to organize your subscriptions.</p>
+              <p><strong>Reading Articles:</strong> Click on a feed in the sidebar to view articles, then click an article to read it in the preview pane.</p>
+              <p><strong>Image Toggle:</strong> Use the image toggle button in the toolbar to show or hide images in article previews.</p>
+            </div>
+          </div>
+          <div class="about-info-item">
+            <div class="about-info-label">Keyboard Shortcuts</div>
+            <div class="about-info-value" style="line-height: 1.6;">
+              <p><strong>J</strong> - Navigate to next article</p>
+              <p><strong>K</strong> - Navigate to previous article</p>
+              <p><strong>V</strong> - Open selected article in browser</p>
+              <p><strong>R</strong> - Refresh all feeds</p>
+              <p><strong>[</strong> - Collapse sidebar</p>
+              <p><strong>]</strong> - Expand sidebar</p>
+              <p><strong>Escape</strong> - Close modals</p>
+            </div>
+          </div>
+          <div class="about-info-item">
+            <div class="about-info-label">Quality of Life Features</div>
+            <div class="about-info-value" style="line-height: 1.6;">
+              <p><strong>Keyboard Navigation:</strong> Quickly navigate through articles using J/K keys for a vim-like experience.</p>
+              <p><strong>Image Toggle:</strong> Toggle images on/off in article previews for faster loading or cleaner reading.</p>
+              <p><strong>Toast Notifications:</strong> Visual feedback for actions like toggling images, with non-intrusive notifications.</p>
+              <p><strong>Sidebar Toggle:</strong> Use [ and ] keys to quickly show or hide the sidebar for more reading space.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="closeHelpBtn">Close</button>
+      </div>
+    </div>
+  </div>
 
   <!-- About Modal -->
   <div class="modal-overlay hidden" id="aboutModal">
@@ -684,6 +735,10 @@
     const manageBtn = document.getElementById('manageFeeds');
     const toggleImagesBtn = document.getElementById('toggleImagesBtn');
     const toastContainer = document.getElementById('toastContainer');
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpModalBtn = document.getElementById('closeHelpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
     const aboutBtn = document.getElementById('aboutBtn');
     const aboutModal = document.getElementById('aboutModal');
     const closeAboutModalBtn = document.getElementById('closeAboutModal');
@@ -1064,8 +1119,12 @@
       // Ignore if user is typing in an input or textarea
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-      // Escape key - close about modal if open
+      // Escape key - close modals if open
       if (e.key === 'Escape') {
+        if (!helpModal.classList.contains('hidden')) {
+          closeHelpModal();
+          return;
+        }
         if (!aboutModal.classList.contains('hidden')) {
           closeAboutModal();
           return;
@@ -1199,6 +1258,35 @@
       }, duration);
     }
 
+    // Help Modal Functions
+    function openHelpModal() {
+      helpModal.classList.remove('hidden');
+    }
+
+    function closeHelpModal() {
+      helpModal.classList.add('hidden');
+    }
+
+    // Help modal event listeners
+    helpBtn.addEventListener('click', () => {
+      openHelpModal();
+    });
+
+    closeHelpModalBtn.addEventListener('click', () => {
+      closeHelpModal();
+    });
+
+    closeHelpBtn.addEventListener('click', () => {
+      closeHelpModal();
+    });
+
+    // Close help modal when clicking outside
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) {
+        closeHelpModal();
+      }
+    });
+
     // About Modal Functions
     async function openAboutModal() {
       try {
@@ -1239,6 +1327,10 @@
           <div class="about-info-item">
             <div class="about-info-label">Description</div>
             <div class="about-info-value">An RSS reader designed for maximum utility</div>
+          </div>
+          <div class="about-info-item">
+            <div class="about-info-label">Contributors</div>
+            <div class="about-info-value">busse, welovejeff</div>
           </div>
         `;
 

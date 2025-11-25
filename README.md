@@ -18,6 +18,9 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 - Track read/unread status of articles
 - Automatic feed refresh on startup
 - Feed health monitoring
+- **Keyboard shortcuts** - Navigate efficiently with vim-like keyboard controls
+- **Image toggle** - Show or hide images in article previews
+- **Toast notifications** - Visual feedback for app actions
 - **Automatic updates** - The app checks for updates automatically and notifies you when new versions are available
 - **Data migration** - Your data is automatically migrated when updating to new versions
 - OPML import/export support (coming soon)
@@ -92,6 +95,38 @@ Feeds can be organized into multiple categories to help you stay organized.
 - **"All Articles"**: View all articles from all feeds in chronological order
 
 ![Feed Management](screenshots/feed-management.png)
+
+### Keyboard Shortcuts
+
+The app includes powerful keyboard shortcuts for efficient navigation:
+
+- **J** - Navigate to next article
+- **K** - Navigate to previous article
+- **V** - Open selected article in your default browser
+- **R** - Refresh all feeds
+- **[** - Collapse sidebar for more reading space
+- **]** - Expand sidebar
+- **Escape** - Close modals (Help, About, etc.)
+
+These shortcuts work when you're not typing in an input field, allowing for quick navigation without using the mouse.
+
+### Image Toggle
+
+Use the image toggle button in the toolbar to show or hide images in article previews. This is useful for:
+- Faster loading when on slower connections
+- Cleaner reading experience
+- Reducing bandwidth usage
+
+The toggle state is indicated by the button appearance, and a toast notification confirms the action.
+
+### Toast Notifications
+
+The app provides visual feedback through toast notifications for various actions:
+- Image toggle on/off
+- Feed refresh status
+- Other user actions
+
+Notifications appear briefly at the bottom of the screen and automatically dismiss.
 
 ### Feed Management
 
