@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
+const Parser = require('rss-parser');
 
 let mainWindow;
 
@@ -180,11 +181,207 @@ ipcMain.handle('write-settings', async (event, settings) => {
   }
 });
 
+// RSS Feed operations
+const parser = new Parser({
+  customFields: {
+    item: ['content:encoded', 'description']
+  }
+});
+
+ipcMain.handle('fetch-feed', async (event, url) => {
+  try {
+    const feed = await parser.parseURL(url);
+    
+    // Transform feed items to our article format
+    const articles = feed.items.map(item => {
+      // Generate unique ID from guid or link
+      const id = item.guid || item.link || `article-${Date.now()}-${Math.random()}`;
+      
+      // Parse pubDate to ISO string
+      let pubDate = null;
+      if (item.pubDate) {
+        try {
+          pubDate = new Date(item.pubDate).toISOString();
+        } catch (e) {
+          console.warn('Error parsing pubDate:', item.pubDate);
+        }
+      }
+      
+      return {
+        id: id,
+        title: item.title || 'Untitled',
+        link: item.link || '',
+        description: item.contentSnippet || item.description || '',
+        content: item['content:encoded'] || item.content || item.description || '',
+        pubDate: pubDate,
+        author: item.creator || item.author || '',
+        categories: item.categories || []
+      };
+    });
+    
+    return {
+      success: true,
+      data: {
+        feedTitle: feed.title || '',
+        feedDescription: feed.description || '',
+        feedLink: feed.link || '',
+        articles: articles
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching feed:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to fetch feed'
+    };
+  }
+});
+
+ipcMain.handle('read-articles', async (event, feedId) => {
+  const filename = `articles-${feedId}.json`;
+  const filePath = path.join(dataDir, filename);
+  try {
+    const data = await fs.readFile(filePath, 'utf-8');
+    return { success: true, data: JSON.parse(data) };
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      // File doesn't exist, return empty structure
+      return {
+        success: true,
+        data: {
+          feedId: feedId,
+          lastFetched: null,
+          articles: []
+        }
+      };
+    }
+    console.error('Error reading articles:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('write-articles', async (event, feedId, articlesData) => {
+  const filename = `articles-${feedId}.json`;
+  const filePath = path.join(dataDir, filename);
+  try {
+    // Ensure feedId is set in the data
+    const dataToWrite = {
+      ...articlesData,
+      feedId: feedId
+    };
+    await fs.writeFile(filePath, JSON.stringify(dataToWrite, null, 2), 'utf-8');
+    return { success: true };
+  } catch (error) {
+    console.error('Error writing articles:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Helper function to fetch a single feed and update its status
+async function fetchFeedAndUpdate(feed) {
+  try {
+    const result = await parser.parseURL(feed.url);
+    
+    // Transform feed items to our article format
+    const articles = result.items.map(item => {
+      const id = item.guid || item.link || `article-${Date.now()}-${Math.random()}`;
+      
+      let pubDate = null;
+      if (item.pubDate) {
+        try {
+          pubDate = new Date(item.pubDate).toISOString();
+        } catch (e) {
+          console.warn('Error parsing pubDate:', item.pubDate);
+        }
+      }
+      
+      return {
+        id: id,
+        title: item.title || 'Untitled',
+        link: item.link || '',
+        description: item.contentSnippet || item.description || '',
+        content: item['content:encoded'] || item.content || item.description || '',
+        pubDate: pubDate,
+        author: item.creator || item.author || '',
+        categories: item.categories || []
+      };
+    });
+    
+    // Save articles to file
+    const articlesData = {
+      feedId: feed.id,
+      lastFetched: new Date().toISOString(),
+      articles: articles
+    };
+    
+    const filename = `articles-${feed.id}.json`;
+    const filePath = path.join(dataDir, filename);
+    await fs.writeFile(filePath, JSON.stringify(articlesData, null, 2), 'utf-8');
+    
+    // Update feed status and lastUpdated
+    const feedsResult = await fs.readFile(path.join(dataDir, 'feeds.json'), 'utf-8');
+    const feeds = JSON.parse(feedsResult);
+    const feedIndex = feeds.findIndex(f => f.id === feed.id);
+    if (feedIndex !== -1) {
+      feeds[feedIndex].lastUpdated = new Date().toISOString();
+      feeds[feedIndex].status = 'healthy';
+      await fs.writeFile(path.join(dataDir, 'feeds.json'), JSON.stringify(feeds, null, 2), 'utf-8');
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Error fetching feed ${feed.id}:`, error);
+    
+    // Update feed status to error
+    try {
+      const feedsResult = await fs.readFile(path.join(dataDir, 'feeds.json'), 'utf-8');
+      const feeds = JSON.parse(feedsResult);
+      const feedIndex = feeds.findIndex(f => f.id === feed.id);
+      if (feedIndex !== -1) {
+        feeds[feedIndex].status = 'error';
+        await fs.writeFile(path.join(dataDir, 'feeds.json'), JSON.stringify(feeds, null, 2), 'utf-8');
+      }
+    } catch (updateError) {
+      console.error('Error updating feed status:', updateError);
+    }
+    
+    return { success: false, error: error.message };
+  }
+}
+
+// Automatically fetch all feeds on startup (runs in background)
+async function fetchAllFeedsOnStartup() {
+  try {
+    const feedsResult = await fs.readFile(path.join(dataDir, 'feeds.json'), 'utf-8');
+    const feeds = JSON.parse(feedsResult);
+    
+    if (feeds.length === 0) {
+      return;
+    }
+    
+    // Fetch all feeds in parallel, but don't wait for completion
+    Promise.all(feeds.map(feed => fetchFeedAndUpdate(feed)))
+      .then(() => {
+        console.log('All feeds fetched on startup');
+      })
+      .catch(error => {
+        console.error('Error during startup feed fetch:', error);
+      });
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.error('Error reading feeds on startup:', error);
+    }
+  }
+}
+
 app.whenReady().then(async () => {
   // Initialize data directory
   await ensureDataDir();
   
   createWindow();
+  
+  // Fetch all feeds in the background after window is created
+  fetchAllFeedsOnStartup();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

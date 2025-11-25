@@ -15,6 +15,9 @@
   ],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  },
   "devDependencies": {
     "electron": "^35.7.5"
   }

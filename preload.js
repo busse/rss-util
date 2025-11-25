@@ -29,5 +29,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Settings operations
   readSettings: () => ipcRenderer.invoke('read-settings'),
-  writeSettings: (settings) => ipcRenderer.invoke('write-settings', settings)
+  writeSettings: (settings) => ipcRenderer.invoke('write-settings', settings),
+  
+  // RSS Feed operations
+  fetchFeed: (url) => ipcRenderer.invoke('fetch-feed', url),
+  
+  // Articles operations
+  readArticles: (feedId) => ipcRenderer.invoke('read-articles', feedId),
+  writeArticles: (feedId, articlesData) => ipcRenderer.invoke('write-articles', feedId, articlesData)
 });

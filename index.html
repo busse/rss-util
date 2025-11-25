@@ -212,6 +212,24 @@
       margin-bottom: 15px;
     }
 
+    .article-preview-content a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .article-preview-content a:hover {
+      text-decoration: underline;
+    }
+
+    .article-preview-meta a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .article-preview-meta a:hover {
+      text-decoration: underline;
+    }
+
     .empty-state {
       display: flex;
       flex-direction: column;
@@ -239,108 +257,440 @@
     </div>
     <div class="subscriptions-section">
       <div class="section-title">Subscriptions</div>
-      <ul class="feed-list">
-        <li class="feed-item active">
-          <div class="feed-icon">📰</div>
-          <span class="feed-name">All Articles</span>
-          <span class="unread-count">12</span>
-        </li>
-        <li class="feed-item">
-          <div class="feed-icon" style="background-color: #3498db;">T</div>
-          <span class="feed-name">Tech News</span>
-          <span class="unread-count">5</span>
-        </li>
-        <li class="feed-item">
-          <div class="feed-icon" style="background-color: #2ecc71;">S</div>
-          <span class="feed-name">Science Daily</span>
-          <span class="unread-count">3</span>
-        </li>
-        <li class="feed-item">
-          <div class="feed-icon" style="background-color: #9b59b6;">D</div>
-          <span class="feed-name">Design Weekly</span>
-          <span class="unread-count">4</span>
-        </li>
+      <ul class="feed-list" id="feedList">
+        <!-- Feeds will be dynamically rendered here -->
       </ul>
       <div class="section-title">Folders</div>
-      <ul class="feed-list">
-        <li class="feed-item">
-          <div class="feed-icon" style="background-color: #f39c12;">📁</div>
-          <span class="feed-name">Technology</span>
-        </li>
-        <li class="feed-item">
-          <div class="feed-icon" style="background-color: #1abc9c;">📁</div>
-          <span class="feed-name">Entertainment</span>
-        </li>
+      <ul class="feed-list" id="folderList">
+        <!-- Categories will be dynamically rendered here -->
       </ul>
     </div>
   </aside>
 
   <main class="main-content">
     <div class="toolbar">
-      <span class="toolbar-title">All Articles</span>
+      <span class="toolbar-title" id="toolbarTitle">All Articles</span>
     </div>
     <div class="articles-container">
-      <div class="article-list">
-        <div class="article-item active unread">
-          <div class="article-title">The Future of Artificial Intelligence in 2024</div>
-          <div class="article-meta">Tech News • 2 hours ago</div>
-        </div>
-        <div class="article-item unread">
-          <div class="article-title">New Discovery in Quantum Computing</div>
-          <div class="article-meta">Science Daily • 4 hours ago</div>
-        </div>
-        <div class="article-item">
-          <div class="article-title">Modern UI Design Trends You Should Know</div>
-          <div class="article-meta">Design Weekly • 6 hours ago</div>
-        </div>
-        <div class="article-item">
-          <div class="article-title">Understanding Web Accessibility Standards</div>
-          <div class="article-meta">Tech News • 8 hours ago</div>
-        </div>
-        <div class="article-item">
-          <div class="article-title">Climate Science Breakthrough Announced</div>
-          <div class="article-meta">Science Daily • 1 day ago</div>
-        </div>
+      <div class="article-list" id="articleList">
+        <!-- Articles will be dynamically rendered here -->
       </div>
-      <div class="article-preview">
-        <div class="article-preview-header">
-          <h1 class="article-preview-title">The Future of Artificial Intelligence in 2024</h1>
-          <div class="article-preview-meta">Tech News • Published 2 hours ago</div>
-        </div>
-        <div class="article-preview-content">
-          <p>Artificial intelligence continues to evolve at an unprecedented pace, transforming industries and reshaping how we interact with technology. From advanced language models to breakthrough applications in healthcare, the AI landscape is more exciting than ever.</p>
-          <p>This year has seen remarkable developments in generative AI, with models becoming more capable and accessible. Enterprises are increasingly adopting AI solutions for automation, data analysis, and customer service, leading to significant productivity gains.</p>
-          <p>Looking ahead, experts predict that AI will become even more integrated into our daily lives. From personalized education to autonomous systems, the applications seem limitless. However, this growth also brings important conversations about ethics, safety, and regulation.</p>
-          <p>As we navigate this technological revolution, it's crucial to balance innovation with responsibility, ensuring that AI serves humanity's best interests while minimizing potential risks.</p>
-        </div>
+      <div class="article-preview" id="articlePreview">
+        <!-- Article preview will be dynamically rendered here -->
       </div>
     </div>
   </main>
   <script>
-    // Wait for DOM to be ready
-    document.addEventListener('DOMContentLoaded', () => {
-      // Navigate to Feed Management
-      const manageBtn = document.getElementById('manageFeeds');
-      if (manageBtn) {
-        manageBtn.addEventListener('click', async () => {
-          console.log('Manage button clicked');
-          if (window.electronAPI && window.electronAPI.navigateTo) {
-            try {
-              await window.electronAPI.navigateTo('manage.html');
-              console.log('Navigation successful');
-            } catch (error) {
-              console.error('Navigation error:', error);
-            }
+    // Application State
+    let feeds = [];
+    let categories = [];
+    let allArticles = []; // Flattened array of all articles with feed info
+    let readStates = {};
+    let selectedFeedId = 'all'; // 'all', feedId, or categoryId
+    let selectedArticleId = null;
+
+    // DOM Elements
+    const feedList = document.getElementById('feedList');
+    const folderList = document.getElementById('folderList');
+    const articleList = document.getElementById('articleList');
+    const articlePreview = document.getElementById('articlePreview');
+    const toolbarTitle = document.getElementById('toolbarTitle');
+    const manageBtn = document.getElementById('manageFeeds');
+
+    // Helper Functions
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function formatRelativeTime(timestamp) {
+      if (!timestamp) return 'Unknown time';
+      
+      try {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+        if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+        
+        return date.toLocaleDateString();
+      } catch (e) {
+        return 'Unknown time';
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function getFeedIcon(feed) {
+      if (feed.icon) return feed.icon;
+      if (feed.title) return feed.title.charAt(0).toUpperCase();
+      return '📰';
+    }
+
+    function getFeedIconColor(feed) {
+      const colors = ['#3498db', '#2ecc71', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c', '#34495e'];
+      const hash = feed.id ? feed.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
+      return colors[hash % colors.length];
+    }
+
+    function isArticleRead(articleId) {
+      return readStates[articleId] && readStates[articleId].read === true;
+    }
+
+    function getUnreadCount(feedId) {
+      if (feedId === 'all') {
+        return allArticles.filter(article => !isArticleRead(article.id)).length;
+      }
+      
+      // Check if it's a category
+      const category = categories.find(c => c.id === feedId);
+      if (category) {
+        const categoryFeeds = feeds.filter(f => f.category === feedId);
+        const categoryArticles = allArticles.filter(article => 
+          categoryFeeds.some(feed => feed.id === article.feedId)
+        );
+        return categoryArticles.filter(article => !isArticleRead(article.id)).length;
+      }
+      
+      // It's a feed
+      const feedArticles = allArticles.filter(article => article.feedId === feedId);
+      return feedArticles.filter(article => !isArticleRead(article.id)).length;
+    }
+
+    function getFeedName(feedId) {
+      if (feedId === 'all') return 'All Articles';
+      const category = categories.find(c => c.id === feedId);
+      if (category) return category.name;
+      const feed = feeds.find(f => f.id === feedId);
+      return feed ? feed.title : 'Unknown';
+    }
+
+    // Data Loading Functions
+    async function loadFeeds() {
+      try {
+        if (window.electronAPI && window.electronAPI.readFeeds) {
+          const result = await window.electronAPI.readFeeds();
+          if (result.success) {
+            feeds = result.data || [];
           } else {
-            console.log('Using fallback navigation');
-            // Fallback for testing in browser
-            window.location.href = 'manage.html';
+            console.error('Error loading feeds:', result.error);
+            feeds = [];
           }
-        });
-      } else {
-        console.error('Manage button not found!');
+        } else {
+          feeds = [];
+        }
+      } catch (error) {
+        console.error('Error loading feeds:', error);
+        feeds = [];
+      }
+    }
+
+    async function loadCategories() {
+      try {
+        if (window.electronAPI && window.electronAPI.readCategories) {
+          const result = await window.electronAPI.readCategories();
+          if (result.success) {
+            categories = result.data || [];
+          } else {
+            console.error('Error loading categories:', result.error);
+            categories = [];
+          }
+        } else {
+          categories = [];
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        categories = [];
+      }
+    }
+
+    async function loadReadStates() {
+      try {
+        if (window.electronAPI && window.electronAPI.readReadStates) {
+          const result = await window.electronAPI.readReadStates();
+          if (result.success) {
+            readStates = result.data || {};
+          } else {
+            console.error('Error loading read states:', result.error);
+            readStates = {};
+          }
+        } else {
+          readStates = {};
+        }
+      } catch (error) {
+        console.error('Error loading read states:', error);
+        readStates = {};
+      }
+    }
+
+    async function loadAllArticles() {
+      allArticles = [];
+      
+      for (const feed of feeds) {
+        try {
+          if (window.electronAPI && window.electronAPI.readArticles) {
+            const result = await window.electronAPI.readArticles(feed.id);
+            if (result.success && result.data && result.data.articles) {
+              // Add feed info to each article
+              const articlesWithFeed = result.data.articles.map(article => ({
+                ...article,
+                feedId: feed.id,
+                feedTitle: feed.title || 'Untitled Feed',
+                feedIcon: getFeedIcon(feed)
+              }));
+              allArticles.push(...articlesWithFeed);
+            }
+          }
+        } catch (error) {
+          console.error(`Error loading articles for feed ${feed.id}:`, error);
+        }
+      }
+      
+      // Sort articles by pubDate (newest first)
+      allArticles.sort((a, b) => {
+        const dateA = a.pubDate ? new Date(a.pubDate) : new Date(0);
+        const dateB = b.pubDate ? new Date(b.pubDate) : new Date(0);
+        return dateB - dateA;
+      });
+    }
+
+    // Rendering Functions
+    function renderFeeds() {
+      const allCount = getUnreadCount('all');
+      
+      let html = `
+        <li class="feed-item ${selectedFeedId === 'all' ? 'active' : ''}" data-feed-id="all">
+          <div class="feed-icon">📰</div>
+          <span class="feed-name">All Articles</span>
+          ${allCount > 0 ? `<span class="unread-count">${allCount}</span>` : ''}
+        </li>
+      `;
+
+      feeds.forEach(feed => {
+        const unreadCount = getUnreadCount(feed.id);
+        const isActive = selectedFeedId === feed.id;
+        const icon = getFeedIcon(feed);
+        const iconColor = getFeedIconColor(feed);
+        
+        html += `
+          <li class="feed-item ${isActive ? 'active' : ''}" data-feed-id="${feed.id}">
+            <div class="feed-icon" style="background-color: ${iconColor};">${escapeHtml(icon)}</div>
+            <span class="feed-name">${escapeHtml(feed.title || 'Untitled Feed')}</span>
+            ${unreadCount > 0 ? `<span class="unread-count">${unreadCount}</span>` : ''}
+          </li>
+        `;
+      });
+
+      feedList.innerHTML = html;
+    }
+
+    function renderCategories() {
+      let html = '';
+
+      categories.forEach(category => {
+        const unreadCount = getUnreadCount(category.id);
+        const isActive = selectedFeedId === category.id;
+        
+        html += `
+          <li class="feed-item ${isActive ? 'active' : ''}" data-feed-id="${category.id}">
+            <div class="feed-icon" style="background-color: #f39c12;">${escapeHtml(category.icon || '📁')}</div>
+            <span class="feed-name">${escapeHtml(category.name)}</span>
+            ${unreadCount > 0 ? `<span class="unread-count">${unreadCount}</span>` : ''}
+          </li>
+        `;
+      });
+
+      folderList.innerHTML = html;
+    }
+
+    function getFilteredArticles() {
+      if (selectedFeedId === 'all') {
+        return allArticles;
+      }
+      
+      // Check if it's a category
+      const category = categories.find(c => c.id === selectedFeedId);
+      if (category) {
+        const categoryFeeds = feeds.filter(f => f.category === selectedFeedId);
+        return allArticles.filter(article => 
+          categoryFeeds.some(feed => feed.id === article.feedId)
+        );
+      }
+      
+      // It's a feed
+      return allArticles.filter(article => article.feedId === selectedFeedId);
+    }
+
+    function renderArticles() {
+      const filteredArticles = getFilteredArticles();
+      
+      if (filteredArticles.length === 0) {
+        articleList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-text">No articles found</div>
+          </div>
+        `;
+        return;
+      }
+
+      articleList.innerHTML = filteredArticles.map(article => {
+        const isRead = isArticleRead(article.id);
+        const isActive = selectedArticleId === article.id;
+        const pubDate = formatRelativeTime(article.pubDate);
+        
+        return `
+          <div class="article-item ${isActive ? 'active' : ''} ${!isRead ? 'unread' : ''}" data-article-id="${article.id}">
+            <div class="article-title">${escapeHtml(article.title || 'Untitled')}</div>
+            <div class="article-meta">${escapeHtml(article.feedTitle)} • ${pubDate}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderArticlePreview(article) {
+      if (!article) {
+        articlePreview.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📄</div>
+            <div class="empty-state-text">Select an article to read</div>
+          </div>
+        `;
+        return;
+      }
+
+      const pubDate = article.pubDate ? new Date(article.pubDate).toLocaleString() : 'Unknown date';
+      const author = article.author ? ` • ${escapeHtml(article.author)}` : '';
+      
+      // Use content if available, otherwise description
+      // Content from RSS is typically HTML (from content:encoded), description is usually plain text
+      let content = article.content || article.description || '<p>No content available.</p>';
+      // If description is used and doesn't look like HTML, wrap it in a paragraph
+      if (!article.content && article.description && !article.description.trim().startsWith('<')) {
+        content = `<p>${escapeHtml(article.description)}</p>`;
+      }
+      
+      articlePreview.innerHTML = `
+        <div class="article-preview-header">
+          <h1 class="article-preview-title">${escapeHtml(article.title || 'Untitled')}</h1>
+          <div class="article-preview-meta">
+            ${escapeHtml(article.feedTitle)} • ${pubDate}${author}
+            ${article.link ? ` • <a href="${escapeHtml(article.link)}" target="_blank" rel="noopener noreferrer">View Original</a>` : ''}
+          </div>
+        </div>
+        <div class="article-preview-content">${content}</div>
+      `;
+    }
+
+    // Event Handlers
+    async function handleFeedSelection(feedId) {
+      selectedFeedId = feedId;
+      selectedArticleId = null;
+      
+      toolbarTitle.textContent = getFeedName(feedId);
+      renderFeeds();
+      renderCategories();
+      renderArticles();
+      renderArticlePreview(null);
+    }
+
+    async function handleArticleSelection(articleId) {
+      selectedArticleId = articleId;
+      const article = allArticles.find(a => a.id === articleId);
+      
+      if (article) {
+        // Mark as read
+        if (!isArticleRead(articleId)) {
+          readStates[articleId] = {
+            read: true,
+            readAt: new Date().toISOString()
+          };
+          
+          // Save read state
+          if (window.electronAPI && window.electronAPI.writeReadStates) {
+            await window.electronAPI.writeReadStates(readStates);
+          }
+        }
+        
+        renderArticles();
+        renderArticlePreview(article);
+      }
+    }
+
+    // Event Listeners
+    feedList.addEventListener('click', (e) => {
+      const feedItem = e.target.closest('.feed-item');
+      if (feedItem) {
+        const feedId = feedItem.dataset.feedId;
+        if (feedId) {
+          handleFeedSelection(feedId);
+        }
       }
     });
+
+    folderList.addEventListener('click', (e) => {
+      const feedItem = e.target.closest('.feed-item');
+      if (feedItem) {
+        const feedId = feedItem.dataset.feedId;
+        if (feedId) {
+          handleFeedSelection(feedId);
+        }
+      }
+    });
+
+    articleList.addEventListener('click', (e) => {
+      const articleItem = e.target.closest('.article-item');
+      if (articleItem) {
+        const articleId = articleItem.dataset.articleId;
+        if (articleId) {
+          handleArticleSelection(articleId);
+        }
+      }
+    });
+
+    manageBtn.addEventListener('click', async () => {
+      if (window.electronAPI && window.electronAPI.navigateTo) {
+        try {
+          await window.electronAPI.navigateTo('manage.html');
+        } catch (error) {
+          console.error('Navigation error:', error);
+        }
+      } else {
+        window.location.href = 'manage.html';
+      }
+    });
+
+    // Initialize application
+    async function init() {
+      await Promise.all([loadFeeds(), loadCategories(), loadReadStates()]);
+      await loadAllArticles();
+      
+      renderFeeds();
+      renderCategories();
+      renderArticles();
+      renderArticlePreview(null);
+    }
+
+    // Start application when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   </script>
 </body>
 </html>

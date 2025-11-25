@@ -845,6 +845,7 @@
               </div>
             </div>
             <div class="feed-card-actions">
+              <button class="icon-btn" title="Refresh Feed" data-action="refresh">🔄</button>
               <button class="icon-btn" title="Edit Feed" data-action="edit">✏️</button>
               <button class="icon-btn danger" title="Delete Feed" data-action="delete">🗑️</button>
             </div>
@@ -911,6 +912,111 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // Feed Refresh Operations
+    async function refreshFeed(feedId) {
+      const feed = feeds.find(f => f.id === feedId);
+      if (!feed) {
+        console.error('Feed not found:', feedId);
+        return false;
+      }
+
+      // Update status to indicate fetching
+      const feedIndex = feeds.findIndex(f => f.id === feedId);
+      if (feedIndex !== -1) {
+        feeds[feedIndex].status = 'warning'; // Temporary status
+        renderFeeds();
+      }
+
+      try {
+        if (!window.electronAPI || !window.electronAPI.fetchFeed) {
+          throw new Error('electronAPI.fetchFeed not available');
+        }
+
+        // Fetch the feed
+        const fetchResult = await window.electronAPI.fetchFeed(feed.url);
+        
+        if (!fetchResult.success) {
+          throw new Error(fetchResult.error || 'Failed to fetch feed');
+        }
+
+        // Store articles
+        const articlesData = {
+          feedId: feedId,
+          lastFetched: new Date().toISOString(),
+          articles: fetchResult.data.articles
+        };
+
+        const writeResult = await window.electronAPI.writeArticles(feedId, articlesData);
+        if (!writeResult.success) {
+          throw new Error(writeResult.error || 'Failed to save articles');
+        }
+
+        // Update feed with new information and status
+        if (feedIndex !== -1) {
+          feeds[feedIndex].lastUpdated = new Date().toISOString();
+          feeds[feedIndex].status = 'healthy';
+          
+          // Update feed title if it was empty or if feed provides a title
+          if (!feeds[feedIndex].title && fetchResult.data.feedTitle) {
+            feeds[feedIndex].title = fetchResult.data.feedTitle;
+          }
+          
+          await saveFeeds();
+          renderFeeds();
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Error refreshing feed:', error);
+        
+        // Update status to error
+        if (feedIndex !== -1) {
+          feeds[feedIndex].status = 'error';
+          await saveFeeds();
+          renderFeeds();
+        }
+        
+        alert(`Failed to refresh feed: ${error.message}`);
+        return false;
+      }
+    }
+
+    async function refreshAllFeeds() {
+      if (feeds.length === 0) {
+        alert('No feeds to refresh');
+        return;
+      }
+
+      // Disable refresh button and show loading state
+      refreshAllBtn.disabled = true;
+      const originalText = refreshAllBtn.textContent;
+      refreshAllBtn.textContent = 'Refreshing...';
+
+      let successCount = 0;
+      let failCount = 0;
+
+      // Refresh all feeds sequentially to avoid overwhelming the network
+      for (const feed of feeds) {
+        const success = await refreshFeed(feed.id);
+        if (success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      }
+
+      // Re-enable button
+      refreshAllBtn.disabled = false;
+      refreshAllBtn.textContent = originalText;
+
+      // Show summary
+      if (failCount === 0) {
+        alert(`Successfully refreshed ${successCount} feed${successCount !== 1 ? 's' : ''}`);
+      } else {
+        alert(`Refreshed ${successCount} feed${successCount !== 1 ? 's' : ''} successfully, ${failCount} failed`);
+      }
     }
 
     // Feed CRUD Operations
@@ -1227,7 +1333,9 @@
       const feedId = feedCard.dataset.feedId;
       const action = e.target.closest('[data-action]')?.dataset.action;
 
-      if (action === 'edit') {
+      if (action === 'refresh') {
+        await refreshFeed(feedId);
+      } else if (action === 'edit') {
         openEditFeedModal(feedId);
       } else if (action === 'delete') {
         if (confirm('Are you sure you want to delete this feed?')) {
@@ -1266,9 +1374,9 @@
       }
     });
 
-    // Refresh all feeds (placeholder - will be implemented when RSS retrieval is added)
-    refreshAllBtn.addEventListener('click', () => {
-      alert('Feed refresh functionality will be implemented when RSS retrieval is added.');
+    // Refresh all feeds
+    refreshAllBtn.addEventListener('click', async () => {
+      await refreshAllFeeds();
     });
 
     // Import/Export OPML (placeholder)
