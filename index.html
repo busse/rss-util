@@ -33,6 +33,25 @@
       background-color: #1a252f;
       font-size: 18px;
       font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .manage-feeds-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .manage-feeds-btn:hover {
+      background-color: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.5);
     }
 
     .subscriptions-section {
@@ -215,7 +234,8 @@
 <body>
   <aside class="sidebar">
     <div class="sidebar-header">
-      RSS Reader
+      <span>RSS Reader</span>
+      <button class="manage-feeds-btn" id="manageFeeds">Manage</button>
     </div>
     <div class="subscriptions-section">
       <div class="section-title">Subscriptions</div>
@@ -296,5 +316,11 @@
       </div>
     </div>
   </main>
+  <script>
+    // Navigate to Feed Management
+    document.getElementById('manageFeeds').addEventListener('click', () => {
+      window.location.href = 'manage.html';
+    });
+  </script>
 </body>
 </html>

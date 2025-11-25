@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>Feed Management - RSS Reader</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #f5f5f5;
+    }
+
+    /* Header Navigation */
+    .header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      border-bottom: 1px solid #1a252f;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .back-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .back-button:hover {
+      background-color: #34495e;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar - Categories/Folders */
+    .sidebar {
+      width: 240px;
+      background-color: white;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .add-folder-btn {
+      background: none;
+      border: none;
+      color: #3498db;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    .add-folder-btn:hover {
+      background-color: #e8f4fc;
+    }
+
+    .folder-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    .folder-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background-color 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .folder-item:hover {
+      background-color: #f9f9f9;
+    }
+
+    .folder-item.active {
+      background-color: #e8f4fc;
+      border-left-color: #3498db;
+    }
+
+    .folder-icon {
+      font-size: 16px;
+    }
+
+    .folder-name {
+      flex: 1;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+
+    .folder-count {
+      font-size: 12px;
+      color: #95a5a6;
+    }
+
+    /* Feed Management Panel */
+    .feed-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .feed-panel-header {
+      padding: 16px 24px;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .feed-panel-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .feed-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background-color: #3498db;
+      color: white;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: #2980b9;
+    }
+
+    .btn-secondary {
+      background-color: white;
+      color: #2c3e50;
+      border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover {
+      background-color: #f9f9f9;
+    }
+
+    /* Feed List */
+    .feed-list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 24px;
+    }
+
+    .feed-card {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: box-shadow 0.2s;
+    }
+
+    .feed-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .feed-card-icon {
+      width: 48px;
+      height: 48px;
+      background-color: #3498db;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .feed-card-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feed-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 4px;
+    }
+
+    .feed-card-url {
+      font-size: 13px;
+      color: #7f8c8d;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feed-card-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: #95a5a6;
+    }
+
+    .feed-status {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-healthy {
+      background-color: #2ecc71;
+    }
+
+    .status-warning {
+      background-color: #f39c12;
+    }
+
+    .status-error {
+      background-color: #e74c3c;
+    }
+
+    .feed-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: #7f8c8d;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background-color: #f5f5f5;
+      color: #2c3e50;
+    }
+
+    .icon-btn.danger:hover {
+      background-color: #fdf0f0;
+      color: #e74c3c;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background-color: white;
+      border-radius: 12px;
+      width: 480px;
+      max-width: 90%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #7f8c8d;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #2c3e50;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      background-color: white;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .form-help {
+      font-size: 12px;
+      color: #95a5a6;
+      margin-top: 6px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Import/Export Section */
+    .import-export-section {
+      padding: 16px 24px;
+      background-color: white;
+      border-top: 1px solid #ddd;
+    }
+
+    .import-export-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 12px;
+    }
+
+    .import-export-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-bottom: 20px;
+      max-width: 300px;
+    }
+
+    /* Drag handle for reordering */
+    .drag-handle {
+      cursor: grab;
+      color: #bdc3c7;
+      font-size: 16px;
+      padding: 4px;
+    }
+
+    .drag-handle:hover {
+      color: #7f8c8d;
+    }
+
+    /* Category badge */
+    .category-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background-color: #e8f4fc;
+      color: #3498db;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <button class="back-button" id="backToReader">
+      ← Back to Reader
+    </button>
+    <h1 class="header-title">Feed Management</h1>
+  </header>
+
+  <div class="main-content">
+    <!-- Sidebar - Categories/Folders -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Categories</span>
+        <button class="add-folder-btn" id="addFolderBtn" title="Add Category">+</button>
+      </div>
+      <ul class="folder-list" id="folderList">
+        <li class="folder-item active" data-folder="all">
+          <span class="folder-icon">📚</span>
+          <span class="folder-name">All Feeds</span>
+          <span class="folder-count" id="allFeedsCount">4</span>
+        </li>
+        <li class="folder-item" data-folder="uncategorized">
+          <span class="folder-icon">📄</span>
+          <span class="folder-name">Uncategorized</span>
+          <span class="folder-count">1</span>
+        </li>
+        <li class="folder-item" data-folder="technology">
+          <span class="folder-icon">💻</span>
+          <span class="folder-name">Technology</span>
+          <span class="folder-count">2</span>
+        </li>
+        <li class="folder-item" data-folder="science">
+          <span class="folder-icon">🔬</span>
+          <span class="folder-name">Science</span>
+          <span class="folder-count">1</span>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Feed Management Panel -->
+    <section class="feed-panel">
+      <div class="feed-panel-header">
+        <h2 class="feed-panel-title" id="panelTitle">All Feeds</h2>
+        <div class="feed-actions">
+          <button class="btn btn-secondary" id="refreshAllBtn">
+            🔄 Refresh All
+          </button>
+          <button class="btn btn-primary" id="addFeedBtn">
+            + Add Feed
+          </button>
+        </div>
+      </div>
+
+      <div class="feed-list-container" id="feedListContainer">
+        <!-- Feed Card 1 -->
+        <div class="feed-card" data-feed-id="1">
+          <span class="drag-handle">⋮⋮</span>
+          <div class="feed-card-icon" style="background-color: #3498db;">T</div>
+          <div class="feed-card-content">
+            <div class="feed-card-title">Tech News Daily</div>
+            <div class="feed-card-url">https://technews.example.com/feed</div>
+            <div class="feed-card-meta">
+              <span class="feed-status">
+                <span class="status-indicator status-healthy"></span>
+                Healthy
+              </span>
+              <span>Last updated: 2 hours ago</span>
+              <span class="category-badge">Technology</span>
+            </div>
+          </div>
+          <div class="feed-card-actions">
+            <button class="icon-btn" title="Edit Feed">✏️</button>
+            <button class="icon-btn danger" title="Delete Feed">🗑️</button>
+          </div>
+        </div>
+
+        <!-- Feed Card 2 -->
+        <div class="feed-card" data-feed-id="2">
+          <span class="drag-handle">⋮⋮</span>
+          <div class="feed-card-icon" style="background-color: #2ecc71;">S</div>
+          <div class="feed-card-content">
+            <div class="feed-card-title">Science Daily</div>
+            <div class="feed-card-url">https://sciencedaily.example.com/rss</div>
+            <div class="feed-card-meta">
+              <span class="feed-status">
+                <span class="status-indicator status-healthy"></span>
+                Healthy
+              </span>
+              <span>Last updated: 4 hours ago</span>
+              <span class="category-badge">Science</span>
+            </div>
+          </div>
+          <div class="feed-card-actions">
+            <button class="icon-btn" title="Edit Feed">✏️</button>
+            <button class="icon-btn danger" title="Delete Feed">🗑️</button>
+          </div>
+        </div>
+
+        <!-- Feed Card 3 -->
+        <div class="feed-card" data-feed-id="3">
+          <span class="drag-handle">⋮⋮</span>
+          <div class="feed-card-icon" style="background-color: #9b59b6;">D</div>
+          <div class="feed-card-content">
+            <div class="feed-card-title">Design Weekly</div>
+            <div class="feed-card-url">https://designweekly.example.com/feed.xml</div>
+            <div class="feed-card-meta">
+              <span class="feed-status">
+                <span class="status-indicator status-warning"></span>
+                Slow response
+              </span>
+              <span>Last updated: 1 day ago</span>
+              <span class="category-badge">Technology</span>
+            </div>
+          </div>
+          <div class="feed-card-actions">
+            <button class="icon-btn" title="Edit Feed">✏️</button>
+            <button class="icon-btn danger" title="Delete Feed">🗑️</button>
+          </div>
+        </div>
+
+        <!-- Feed Card 4 - Error state -->
+        <div class="feed-card" data-feed-id="4">
+          <span class="drag-handle">⋮⋮</span>
+          <div class="feed-card-icon" style="background-color: #e74c3c;">!</div>
+          <div class="feed-card-content">
+            <div class="feed-card-title">Broken Feed Example</div>
+            <div class="feed-card-url">https://broken.example.com/rss</div>
+            <div class="feed-card-meta">
+              <span class="feed-status">
+                <span class="status-indicator status-error"></span>
+                Connection failed
+              </span>
+              <span>Last attempt: 3 days ago</span>
+              <span class="category-badge">Uncategorized</span>
+            </div>
+          </div>
+          <div class="feed-card-actions">
+            <button class="icon-btn" title="Edit Feed">✏️</button>
+            <button class="icon-btn danger" title="Delete Feed">🗑️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import/Export Section -->
+      <div class="import-export-section">
+        <div class="import-export-title">Import & Export</div>
+        <div class="import-export-actions">
+          <button class="btn btn-secondary" id="importOpmlBtn">
+            📥 Import OPML
+          </button>
+          <button class="btn btn-secondary" id="exportOpmlBtn">
+            📤 Export OPML
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Add Feed Modal -->
+  <div class="modal-overlay hidden" id="addFeedModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Feed</h3>
+        <button class="modal-close" id="closeAddFeedModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="feedUrl">Feed URL</label>
+          <input type="url" class="form-input" id="feedUrl" placeholder="https://example.com/feed.xml">
+          <p class="form-help">Enter the RSS or Atom feed URL</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="feedName">Feed Name (optional)</label>
+          <input type="text" class="form-input" id="feedName" placeholder="My Favorite Blog">
+          <p class="form-help">Leave blank to auto-detect from feed</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="feedCategory">Category</label>
+          <select class="form-select" id="feedCategory">
+            <option value="">Uncategorized</option>
+            <option value="technology">Technology</option>
+            <option value="science">Science</option>
+            <option value="entertainment">Entertainment</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelAddFeed">Cancel</button>
+        <button class="btn btn-primary" id="confirmAddFeed">Add Feed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Category Modal -->
+  <div class="modal-overlay hidden" id="addCategoryModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Category</h3>
+        <button class="modal-close" id="closeAddCategoryModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="categoryName">Category Name</label>
+          <input type="text" class="form-input" id="categoryName" placeholder="My Category">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="categoryIcon">Icon</label>
+          <select class="form-select" id="categoryIcon">
+            <option value="📁">📁 Folder</option>
+            <option value="💻">💻 Technology</option>
+            <option value="🔬">🔬 Science</option>
+            <option value="🎮">🎮 Gaming</option>
+            <option value="📰">📰 News</option>
+            <option value="🎨">🎨 Design</option>
+            <option value="💼">💼 Business</option>
+            <option value="🎵">🎵 Music</option>
+            <option value="⚽">⚽ Sports</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelAddCategory">Cancel</button>
+        <button class="btn btn-primary" id="confirmAddCategory">Add Category</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const backToReaderBtn = document.getElementById('backToReader');
+    const addFeedBtn = document.getElementById('addFeedBtn');
+    const addFeedModal = document.getElementById('addFeedModal');
+    const closeAddFeedModalBtn = document.getElementById('closeAddFeedModal');
+    const cancelAddFeedBtn = document.getElementById('cancelAddFeed');
+    const confirmAddFeedBtn = document.getElementById('confirmAddFeed');
+    const addFolderBtn = document.getElementById('addFolderBtn');
+    const addCategoryModal = document.getElementById('addCategoryModal');
+    const closeAddCategoryModalBtn = document.getElementById('closeAddCategoryModal');
+    const cancelAddCategoryBtn = document.getElementById('cancelAddCategory');
+    const confirmAddCategoryBtn = document.getElementById('confirmAddCategory');
+    const folderList = document.getElementById('folderList');
+    const feedListContainer = document.getElementById('feedListContainer');
+    const panelTitle = document.getElementById('panelTitle');
+    const refreshAllBtn = document.getElementById('refreshAllBtn');
+    const importOpmlBtn = document.getElementById('importOpmlBtn');
+    const exportOpmlBtn = document.getElementById('exportOpmlBtn');
+
+    // Navigation
+    backToReaderBtn.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    // Add Feed Modal
+    addFeedBtn.addEventListener('click', () => {
+      addFeedModal.classList.remove('hidden');
+    });
+
+    closeAddFeedModalBtn.addEventListener('click', () => {
+      addFeedModal.classList.add('hidden');
+    });
+
+    cancelAddFeedBtn.addEventListener('click', () => {
+      addFeedModal.classList.add('hidden');
+    });
+
+    confirmAddFeedBtn.addEventListener('click', () => {
+      const feedUrl = document.getElementById('feedUrl').value.trim();
+      const feedName = document.getElementById('feedName').value;
+      const feedCategory = document.getElementById('feedCategory').value;
+      
+      if (feedUrl) {
+        // Validate URL format
+        try {
+          new URL(feedUrl);
+        } catch (e) {
+          alert('Please enter a valid URL (e.g., https://example.com/feed.xml)');
+          return;
+        }
+        
+        // In a real implementation, this would add the feed to storage
+        console.log('Adding feed:', { feedUrl, feedName, feedCategory });
+        addFeedModal.classList.add('hidden');
+        // Reset form
+        document.getElementById('feedUrl').value = '';
+        document.getElementById('feedName').value = '';
+        document.getElementById('feedCategory').value = '';
+      }
+    });
+
+    // Add Category Modal
+    addFolderBtn.addEventListener('click', () => {
+      addCategoryModal.classList.remove('hidden');
+    });
+
+    closeAddCategoryModalBtn.addEventListener('click', () => {
+      addCategoryModal.classList.add('hidden');
+    });
+
+    cancelAddCategoryBtn.addEventListener('click', () => {
+      addCategoryModal.classList.add('hidden');
+    });
+
+    confirmAddCategoryBtn.addEventListener('click', () => {
+      const categoryName = document.getElementById('categoryName').value;
+      const categoryIcon = document.getElementById('categoryIcon').value;
+      
+      if (categoryName) {
+        // In a real implementation, this would add the category to storage
+        console.log('Adding category:', { categoryName, categoryIcon });
+        addCategoryModal.classList.add('hidden');
+        // Reset form
+        document.getElementById('categoryName').value = '';
+        document.getElementById('categoryIcon').selectedIndex = 0;
+      }
+    });
+
+    // Folder selection
+    folderList.addEventListener('click', (e) => {
+      const folderItem = e.target.closest('.folder-item');
+      if (folderItem) {
+        // Remove active class from all items
+        document.querySelectorAll('.folder-item').forEach(item => {
+          item.classList.remove('active');
+        });
+        // Add active class to clicked item
+        folderItem.classList.add('active');
+        // Update panel title
+        const folderName = folderItem.querySelector('.folder-name').textContent;
+        panelTitle.textContent = folderName;
+      }
+    });
+
+    // Feed card actions
+    feedListContainer.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.icon-btn:not(.danger)');
+      const deleteBtn = e.target.closest('.icon-btn.danger');
+      const feedCard = e.target.closest('.feed-card');
+      
+      if (editBtn && feedCard) {
+        const feedId = feedCard.dataset.feedId;
+        console.log('Edit feed:', feedId);
+        // Open edit modal (to be implemented)
+      }
+      
+      if (deleteBtn && feedCard) {
+        const feedId = feedCard.dataset.feedId;
+        if (confirm('Are you sure you want to delete this feed?')) {
+          console.log('Delete feed:', feedId);
+          feedCard.remove();
+        }
+      }
+    });
+
+    // Refresh all feeds
+    refreshAllBtn.addEventListener('click', () => {
+      console.log('Refreshing all feeds...');
+      // In a real implementation, this would refresh all feeds
+    });
+
+    // Import/Export OPML
+    importOpmlBtn.addEventListener('click', () => {
+      console.log('Import OPML clicked');
+      // In a real implementation, this would open a file picker
+    });
+
+    exportOpmlBtn.addEventListener('click', () => {
+      console.log('Export OPML clicked');
+      // In a real implementation, this would save an OPML file
+    });
+
+    // Close modals when clicking outside
+    addFeedModal.addEventListener('click', (e) => {
+      if (e.target === addFeedModal) {
+        addFeedModal.classList.add('hidden');
+      }
+    });
+
+    addCategoryModal.addEventListener('click', (e) => {
+      if (e.target === addCategoryModal) {
+        addCategoryModal.classList.add('hidden');
+      }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        addFeedModal.classList.add('hidden');
+        addCategoryModal.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
