@@ -769,11 +769,19 @@
     });
 
     confirmAddFeedBtn.addEventListener('click', () => {
-      const feedUrl = document.getElementById('feedUrl').value;
+      const feedUrl = document.getElementById('feedUrl').value.trim();
       const feedName = document.getElementById('feedName').value;
       const feedCategory = document.getElementById('feedCategory').value;
       
       if (feedUrl) {
+        // Validate URL format
+        try {
+          new URL(feedUrl);
+        } catch (e) {
+          alert('Please enter a valid URL (e.g., https://example.com/feed.xml)');
+          return;
+        }
+        
         // In a real implementation, this would add the feed to storage
         console.log('Adding feed:', { feedUrl, feedName, feedCategory });
         addFeedModal.classList.add('hidden');
@@ -807,6 +815,7 @@
         addCategoryModal.classList.add('hidden');
         // Reset form
         document.getElementById('categoryName').value = '';
+        document.getElementById('categoryIcon').selectedIndex = 0;
       }
     });
 
