@@ -1,0 +1,21 @@
+{
+  "name": "rss-util",
+  "version": "1.0.0",
+  "description": "An RSS reader designed for maximum utility",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "rss",
+    "reader",
+    "electron",
+    "mac"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^35.7.5"
+  }
+}
