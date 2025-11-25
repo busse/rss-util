@@ -2,8 +2,13 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const Parser = require('rss-parser');
+const { autoUpdater } = require('electron-updater');
+const migrations = require('./migrations');
 
 let mainWindow;
+
+// Get current app version from package.json
+const appVersion = require('./package.json').version;
 
 // Get user data directory and data subdirectory
 const userDataPath = app.getPath('userData');
@@ -374,11 +379,132 @@ async function fetchAllFeedsOnStartup() {
   }
 }
 
+// Auto-updater configuration
+function setupAutoUpdater() {
+  // Auto-updater is configured via package.json "publish" field
+  // It will automatically use GitHub releases from the configured repository
+  
+  // Check for updates on startup (after a short delay to not block app startup)
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch(err => {
+      console.error('Error checking for updates:', err);
+    });
+  }, 5000);
+  
+  // Check for updates every 4 hours
+  setInterval(() => {
+    autoUpdater.checkForUpdates().catch(err => {
+      console.error('Error checking for updates:', err);
+    });
+  }, 4 * 60 * 60 * 1000); // 4 hours
+  
+  // Auto-updater events
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for updates...');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-status', { status: 'checking' });
+    }
+  });
+  
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info.version);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-available', {
+        version: info.version,
+        releaseDate: info.releaseDate,
+        releaseNotes: info.releaseNotes
+      });
+    }
+  });
+  
+  autoUpdater.on('update-not-available', () => {
+    console.log('No updates available');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-status', { status: 'not-available' });
+    }
+  });
+  
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded:', info.version);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-downloaded', {
+        version: info.version,
+        releaseDate: info.releaseDate,
+        releaseNotes: info.releaseNotes
+      });
+    }
+  });
+  
+  autoUpdater.on('download-progress', (progressObj) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-progress', {
+        percent: progressObj.percent,
+        transferred: progressObj.transferred,
+        total: progressObj.total
+      });
+    }
+  });
+  
+  autoUpdater.on('error', (error) => {
+    console.error('Auto-updater error:', error);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-error', {
+        message: error.message
+      });
+    }
+  });
+}
+
+// IPC handlers for update operations
+ipcMain.handle('check-for-updates', async () => {
+  try {
+    await autoUpdater.checkForUpdates();
+    return { success: true };
+  } catch (error) {
+    console.error('Error checking for updates:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('get-update-status', async () => {
+  // Return current update status
+  // This is a simple implementation - you might want to track state more explicitly
+  return { success: true, status: 'idle' };
+});
+
+ipcMain.handle('install-update', async () => {
+  try {
+    // Quit and install update
+    autoUpdater.quitAndInstall(false, true);
+    return { success: true };
+  } catch (error) {
+    console.error('Error installing update:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 app.whenReady().then(async () => {
   // Initialize data directory
   await ensureDataDir();
   
+  // Run migrations before creating window
+  try {
+    const storedVersion = await migrations.getStoredVersion(dataDir);
+    console.log(`Current app version: ${appVersion}, Stored data version: ${storedVersion}`);
+    
+    const migrationSuccess = await migrations.runMigrations(dataDir, appVersion, storedVersion);
+    if (!migrationSuccess) {
+      console.error('Migration failed, but continuing with app startup');
+    }
+  } catch (error) {
+    console.error('Error during migration:', error);
+    // Continue with app startup even if migration fails
+  }
+  
   createWindow();
+  
+  // Setup auto-updater after window is created
+  setupAutoUpdater();
   
   // Fetch all feeds in the background after window is created
   fetchAllFeedsOnStartup();

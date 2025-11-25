@@ -18,6 +18,8 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 - Track read/unread status of articles
 - Automatic feed refresh on startup
 - Feed health monitoring
+- **Automatic updates** - The app checks for updates automatically and notifies you when new versions are available
+- **Data migration** - Your data is automatically migrated when updating to new versions
 - OPML import/export support (coming soon)
 
 ## Prerequisites
@@ -100,14 +102,93 @@ The Feed Management page allows you to:
 - Monitor feed health status
 - Import/export OPML files (coming soon)
 
+## Auto-Updates
+
+The application includes automatic update functionality powered by `electron-updater` and GitHub Releases.
+
+### How It Works
+
+- **Automatic Checking**: The app automatically checks for updates on startup (after a 5-second delay) and then every 4 hours
+- **Update Notifications**: When an update is available, a notification banner appears at the top of the application
+- **Download Progress**: During download, you'll see a progress bar showing the download status
+- **Installation**: Once downloaded, click the "Install & Restart" button to install the update and restart the app
+- **Data Safety**: Your feeds, articles, and settings are automatically preserved during updates
+
+### Update Behavior
+
+- Updates are checked automatically in the background
+- You can dismiss the update notification if you want to update later
+- The app will continue to work normally even if you don't update immediately
+- Updates are downloaded in the background and don't interrupt your reading
+
+### Data Migration
+
+When updating to a new version, the app automatically runs data migrations to ensure your data structure is compatible with the new version. Migrations are:
+- **Automatic**: Run on app startup before the main window opens
+- **Safe**: Your data is preserved and transformed as needed
+- **Idempotent**: Safe to run multiple times without issues
+
+## Building and Releasing
+
+### Building the Application
+
+To build the application for distribution:
+
+```bash
+# Build for macOS (creates DMG)
+npm run build:mac
+
+# Build for all platforms
+npm run build
+```
+
+The built application will be in the `dist/` directory.
+
+### Version Management
+
+The project uses semantic versioning (SEMVER). To bump the version:
+
+```bash
+# Patch version (1.0.0 → 1.0.1)
+npm run version:patch
+
+# Minor version (1.0.0 → 1.1.0)
+npm run version:minor
+
+# Major version (1.0.0 → 2.0.0)
+npm run version:major
+```
+
+### Creating a Release
+
+1. **Bump the version**:
+   ```bash
+   npm run version:patch  # or minor/major
+   ```
+
+2. **Build the application**:
+   ```bash
+   npm run build:mac
+   ```
+
+3. **Create a GitHub Release**:
+   - Go to the [GitHub Releases page](https://github.com/busse/rss-util/releases)
+   - Click "Draft a new release"
+   - Create a tag matching the version (e.g., `v1.0.1`)
+   - Upload the DMG file from the `dist/` directory
+   - Publish the release
+
+4. **Auto-Update**: Once the release is published, users with the app installed will automatically be notified of the update on their next check (or within 4 hours).
+
 ## Development
 
 This project uses Electron to create a cross-platform desktop application. The main files are:
 
-- `main.js` - Electron main process
+- `main.js` - Electron main process (includes auto-updater and migration runner)
 - `index.html` - Main reader interface
 - `manage.html` - Feed management interface
 - `preload.js` - Secure IPC bridge between main and renderer processes
+- `migrations/` - Data migration scripts for version upgrades
 
 ### Generating Screenshots
 
@@ -118,6 +199,30 @@ npm run screenshots
 ```
 
 This will create screenshots in the `screenshots/` directory using Playwright.
+
+### Creating Migrations
+
+When making breaking changes to data structures, create a migration file in the `migrations/` directory:
+
+1. Create a file named `migration-X.Y.Z-to-A.B.C.js` (where X.Y.Z is the from version and A.B.C is the to version)
+2. Export an object with:
+   - `fromVersion`: The version this migration starts from
+   - `toVersion`: The version this migration upgrades to
+   - `migrate(dataDir)`: An async function that performs the migration
+
+Example migration structure:
+```javascript
+module.exports = {
+  fromVersion: '1.0.0',
+  toVersion: '1.1.0',
+  async migrate(dataDir) {
+    // Migration logic here
+    // Read existing data, transform, write back
+  }
+};
+```
+
+Migrations should be **idempotent** (safe to run multiple times) and should preserve user data.
 
 ## Contributing
 

@@ -6,7 +6,13 @@
   "scripts": {
     "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "screenshots": "node scripts/screenshot.js"
+    "screenshots": "node scripts/screenshot.js",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "release": "electron-builder --publish=never",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major"
   },
   "keywords": [
     "rss",
@@ -17,10 +23,45 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "electron-updater": "^6.6.2",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "electron": "^35.7.5",
+    "electron-builder": "^26.0.12",
     "playwright": "^1.57.0"
+  },
+  "build": {
+    "appId": "com.rssutil.app",
+    "productName": "RSS Reader",
+    "mac": {
+      "category": "public.app-category.news",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "busse",
+      "repo": "rss-util"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "manage.html",
+      "migrations/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "build"
+    }
   }
 }

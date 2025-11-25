@@ -501,9 +501,116 @@
       font-size: 11px;
       font-weight: 500;
     }
+
+    /* Update Notification */
+    .update-notification {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #3498db;
+      color: white;
+      padding: 12px 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .update-notification.visible {
+      display: flex;
+    }
+
+    .update-notification.downloading {
+      background-color: #2ecc71;
+    }
+
+    .update-notification.error {
+      background-color: #e74c3c;
+    }
+
+    .update-notification-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .update-notification-text {
+      flex: 1;
+    }
+
+    .update-notification-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .update-progress {
+      width: 200px;
+      height: 6px;
+      background-color: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .update-progress-bar {
+      height: 100%;
+      background-color: white;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    .update-btn {
+      background-color: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background-color 0.2s;
+    }
+
+    .update-btn:hover {
+      background-color: rgba(255,255,255,0.3);
+    }
+
+    .update-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.8;
+    }
+
+    .update-close:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
+  <!-- Update Notification Banner -->
+  <div class="update-notification" id="updateNotification">
+    <div class="update-notification-content">
+      <span id="updateNotificationText">Update available</span>
+      <div class="update-progress" id="updateProgress" style="display: none;">
+        <div class="update-progress-bar" id="updateProgressBar"></div>
+      </div>
+    </div>
+    <div class="update-notification-actions">
+      <button class="update-btn" id="updateInstallBtn" style="display: none;">Install & Restart</button>
+      <button class="update-close" id="updateCloseBtn">&times;</button>
+    </div>
+  </div>
   <header class="header">
     <button class="back-button" id="backToReader">
       ← Back to Reader
@@ -1409,6 +1516,86 @@
       }
     });
 
+    // Update Notification Management
+    const updateNotification = document.getElementById('updateNotification');
+    const updateNotificationText = document.getElementById('updateNotificationText');
+    const updateProgress = document.getElementById('updateProgress');
+    const updateProgressBar = document.getElementById('updateProgressBar');
+    const updateInstallBtn = document.getElementById('updateInstallBtn');
+    const updateCloseBtn = document.getElementById('updateCloseBtn');
+
+    function showUpdateNotification(message, type = 'info') {
+      updateNotificationText.textContent = message;
+      updateNotification.className = 'update-notification visible ' + type;
+      updateNotification.style.display = 'flex';
+    }
+
+    function hideUpdateNotification() {
+      updateNotification.classList.remove('visible');
+      updateNotification.style.display = 'none';
+    }
+
+    function showUpdateProgress(percent) {
+      updateProgress.style.display = 'block';
+      updateProgressBar.style.width = percent + '%';
+    }
+
+    function hideUpdateProgress() {
+      updateProgress.style.display = 'none';
+      updateProgressBar.style.width = '0%';
+    }
+
+    // Setup update event listeners
+    if (window.electronAPI) {
+      window.electronAPI.onUpdateStatus((data) => {
+        if (data.status === 'checking') {
+          showUpdateNotification('Checking for updates...', 'info');
+        } else if (data.status === 'not-available') {
+          // Don't show notification for "not available"
+          hideUpdateNotification();
+        }
+      });
+
+      window.electronAPI.onUpdateAvailable((data) => {
+        showUpdateNotification(`Update available: v${data.version}`, 'info');
+        updateInstallBtn.style.display = 'none';
+        hideUpdateProgress();
+      });
+
+      window.electronAPI.onUpdateDownloaded((data) => {
+        showUpdateNotification(`Update downloaded: v${data.version}. Click to install.`, 'downloading');
+        updateInstallBtn.style.display = 'block';
+        hideUpdateProgress();
+      });
+
+      window.electronAPI.onUpdateProgress((data) => {
+        showUpdateNotification(`Downloading update... ${Math.round(data.percent)}%`, 'downloading');
+        showUpdateProgress(data.percent);
+        updateInstallBtn.style.display = 'none';
+      });
+
+      window.electronAPI.onUpdateError((data) => {
+        showUpdateNotification(`Update error: ${data.message}`, 'error');
+        hideUpdateProgress();
+      });
+    }
+
+    // Update button handlers
+    updateInstallBtn.addEventListener('click', async () => {
+      if (window.electronAPI && window.electronAPI.installUpdate) {
+        try {
+          await window.electronAPI.installUpdate();
+        } catch (error) {
+          console.error('Error installing update:', error);
+          showUpdateNotification('Error installing update', 'error');
+        }
+      }
+    });
+
+    updateCloseBtn.addEventListener('click', () => {
+      hideUpdateNotification();
+    });
+
     // Initialize application
     async function init() {
       await Promise.all([loadFeeds(), loadCategories()]);
@@ -1420,6 +1607,13 @@
     } else {
       init();
     }
+
+    // Cleanup listeners on page unload
+    window.addEventListener('beforeunload', () => {
+      if (window.electronAPI && window.electronAPI.removeUpdateListeners) {
+        window.electronAPI.removeUpdateListeners();
+      }
+    });
   </script>
 </body>
 </html>

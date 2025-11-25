@@ -36,5 +36,36 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Articles operations
   readArticles: (feedId) => ipcRenderer.invoke('read-articles', feedId),
-  writeArticles: (feedId, articlesData) => ipcRenderer.invoke('write-articles', feedId, articlesData)
+  writeArticles: (feedId, articlesData) => ipcRenderer.invoke('write-articles', feedId, articlesData),
+  
+  // Update operations
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  getUpdateStatus: () => ipcRenderer.invoke('get-update-status'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  
+  // Update event listeners
+  onUpdateStatus: (callback) => {
+    ipcRenderer.on('update-status', (event, data) => callback(data));
+  },
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on('update-available', (event, data) => callback(data));
+  },
+  onUpdateDownloaded: (callback) => {
+    ipcRenderer.on('update-downloaded', (event, data) => callback(data));
+  },
+  onUpdateProgress: (callback) => {
+    ipcRenderer.on('update-progress', (event, data) => callback(data));
+  },
+  onUpdateError: (callback) => {
+    ipcRenderer.on('update-error', (event, data) => callback(data));
+  },
+  
+  // Remove update event listeners
+  removeUpdateListeners: () => {
+    ipcRenderer.removeAllListeners('update-status');
+    ipcRenderer.removeAllListeners('update-available');
+    ipcRenderer.removeAllListeners('update-downloaded');
+    ipcRenderer.removeAllListeners('update-progress');
+    ipcRenderer.removeAllListeners('update-error');
+  }
 });
