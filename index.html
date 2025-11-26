@@ -586,6 +586,181 @@
     .btn-secondary:hover {
       background-color: #d5dbdb;
     }
+
+    .btn-primary {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #2980b9;
+    }
+
+    /* Settings Modal Styles */
+    .settings-section {
+      margin-bottom: 32px;
+    }
+
+    .settings-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .settings-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .form-help {
+      font-size: 12px;
+      color: #95a5a6;
+      margin-top: 6px;
+    }
+
+    .api-key-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .api-key-input-wrapper .form-input {
+      padding-right: 45px;
+    }
+
+    .api-key-toggle {
+      position: absolute;
+      right: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      font-size: 16px;
+      color: #7f8c8d;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .api-key-toggle:hover {
+      color: #2c3e50;
+    }
+
+    /* Feature Flag Styles */
+    .feature-flag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .feature-flag-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background-color: #f9f9f9;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .feature-flag-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    .feature-flag-info {
+      flex: 1;
+    }
+
+    .feature-flag-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #2c3e50;
+      margin-bottom: 4px;
+    }
+
+    .feature-flag-description {
+      font-size: 12px;
+      color: #7f8c8d;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 28px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #3498db;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(22px);
+    }
+
+    .toggle-switch input:focus + .toggle-slider {
+      box-shadow: 0 0 1px #3498db;
+    }
   </style>
 </head>
 
@@ -619,6 +794,10 @@
       </ul>
     </div>
     <div class="sidebar-footer">
+      <button class="about-btn" id="settingsBtn">
+        <span>⚙️</span>
+        <span>Settings</span>
+      </button>
       <button class="about-btn" id="helpBtn">
         <span>❓</span>
         <span>Help</span>
@@ -714,6 +893,39 @@
     </div>
   </div>
 
+  <!-- Settings Modal -->
+  <div class="modal-overlay hidden" id="settingsModal">
+    <div class="modal" style="width: 560px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Settings</h3>
+        <button class="modal-close" id="closeSettingsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <div class="settings-section-title">OpenAI API Key</div>
+          <div class="form-group">
+            <label class="form-label" for="apiKeyInput">API Key</label>
+            <div class="api-key-input-wrapper">
+              <input type="password" class="form-input" id="apiKeyInput" placeholder="sk-...">
+              <button type="button" class="api-key-toggle" id="toggleApiKeyVisibility" title="Show/Hide API Key">👁️</button>
+            </div>
+            <p class="form-help">Your API key is encrypted and stored securely. It will be used for AI-powered features.</p>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">Feature Flags</div>
+          <div class="feature-flag-list" id="featureFlagList">
+            <!-- Feature flags will be dynamically rendered here -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveSettingsBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Application State
     let feeds = [];
@@ -744,6 +956,14 @@
     const closeAboutModalBtn = document.getElementById('closeAboutModal');
     const closeAboutBtn = document.getElementById('closeAboutBtn');
     const aboutInfo = document.getElementById('aboutInfo');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsModalBtn = document.getElementById('closeSettingsModal');
+    const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const toggleApiKeyVisibility = document.getElementById('toggleApiKeyVisibility');
+    const featureFlagList = document.getElementById('featureFlagList');
 
     // Helper Functions
     function generateUUID() {
@@ -1129,6 +1349,10 @@
           closeAboutModal();
           return;
         }
+        if (!settingsModal.classList.contains('hidden')) {
+          closeSettingsModal();
+          return;
+        }
       }
 
       if (e.key === 'r') {
@@ -1361,6 +1585,156 @@
     aboutModal.addEventListener('click', (e) => {
       if (e.target === aboutModal) {
         closeAboutModal();
+      }
+    });
+
+    // Settings Modal Functions
+    let apiKeyVisible = false;
+    let originalApiKeyValue = '';
+
+    async function loadSettings() {
+      try {
+        // Load API key
+        if (window.electronAPI && window.electronAPI.getEncryptedApiKey) {
+          const result = await window.electronAPI.getEncryptedApiKey();
+          if (result.success && result.data) {
+            apiKeyInput.value = result.data;
+            originalApiKeyValue = result.data;
+          } else {
+            apiKeyInput.value = '';
+            originalApiKeyValue = '';
+          }
+        }
+
+        // Load feature flags
+        if (window.electronAPI && window.electronAPI.getFeatureFlags) {
+          const result = await window.electronAPI.getFeatureFlags();
+          if (result.success && result.data) {
+            renderFeatureFlags(result.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    }
+
+    function renderFeatureFlags(featureFlags) {
+      const flags = [
+        {
+          name: 'aiArticleSummary',
+          label: 'AI Article Summary',
+          description: 'Enable AI-powered article summaries (coming soon)'
+        }
+      ];
+
+      featureFlagList.innerHTML = flags.map(flag => {
+        const enabled = featureFlags[flag.name] || false;
+        return `
+          <div class="feature-flag-item">
+            <div class="feature-flag-info">
+              <div class="feature-flag-name">${escapeHtml(flag.label)}</div>
+              <div class="feature-flag-description">${escapeHtml(flag.description)}</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" data-flag-name="${flag.name}" ${enabled ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function saveSettings() {
+      try {
+        // Save API key
+        const apiKey = apiKeyInput.value.trim();
+        if (window.electronAPI && window.electronAPI.setEncryptedApiKey) {
+          const result = await window.electronAPI.setEncryptedApiKey(apiKey);
+          if (!result.success) {
+            alert('Failed to save API key: ' + (result.error || 'Unknown error'));
+            return false;
+          }
+          originalApiKeyValue = apiKey;
+        }
+
+        // Save feature flags
+        const flagCheckboxes = featureFlagList.querySelectorAll('input[type="checkbox"][data-flag-name]');
+        for (const checkbox of flagCheckboxes) {
+          const flagName = checkbox.dataset.flagName;
+          const enabled = checkbox.checked;
+          
+          if (window.electronAPI && window.electronAPI.setFeatureFlag) {
+            const result = await window.electronAPI.setFeatureFlag(flagName, enabled);
+            if (!result.success) {
+              console.error(`Failed to save feature flag ${flagName}:`, result.error);
+            }
+          }
+        }
+
+        showToast('Settings saved');
+        return true;
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        alert('Failed to save settings: ' + error.message);
+        return false;
+      }
+    }
+
+    async function openSettingsModal() {
+      await loadSettings();
+      settingsModal.classList.remove('hidden');
+      apiKeyVisible = false;
+      apiKeyInput.type = 'password';
+    }
+
+    function closeSettingsModal() {
+      // Reset API key visibility
+      apiKeyVisible = false;
+      apiKeyInput.type = 'password';
+      toggleApiKeyVisibility.textContent = '👁️';
+      
+      // Reset form values
+      apiKeyInput.value = originalApiKeyValue;
+      
+      settingsModal.classList.add('hidden');
+    }
+
+    // Settings modal event listeners
+    settingsBtn.addEventListener('click', () => {
+      openSettingsModal();
+    });
+
+    closeSettingsModalBtn.addEventListener('click', () => {
+      closeSettingsModal();
+    });
+
+    cancelSettingsBtn.addEventListener('click', () => {
+      closeSettingsModal();
+    });
+
+    saveSettingsBtn.addEventListener('click', async () => {
+      const success = await saveSettings();
+      if (success) {
+        closeSettingsModal();
+      }
+    });
+
+    // Toggle API key visibility
+    toggleApiKeyVisibility.addEventListener('click', () => {
+      apiKeyVisible = !apiKeyVisible;
+      if (apiKeyVisible) {
+        apiKeyInput.type = 'text';
+        toggleApiKeyVisibility.textContent = '🙈';
+      } else {
+        apiKeyInput.type = 'password';
+        toggleApiKeyVisibility.textContent = '👁️';
+      }
+    });
+
+    // Close modal when clicking outside
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        closeSettingsModal();
       }
     });
 

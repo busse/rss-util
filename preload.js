@@ -31,6 +31,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readSettings: () => ipcRenderer.invoke('read-settings'),
   writeSettings: (settings) => ipcRenderer.invoke('write-settings', settings),
   
+  // Encrypted API key operations
+  getEncryptedApiKey: () => ipcRenderer.invoke('get-encrypted-api-key'),
+  setEncryptedApiKey: (apiKey) => ipcRenderer.invoke('set-encrypted-api-key', apiKey),
+  
+  // Feature flags operations
+  getFeatureFlags: () => ipcRenderer.invoke('get-feature-flags'),
+  setFeatureFlag: (flagName, enabled) => ipcRenderer.invoke('set-feature-flag', flagName, enabled),
+  
   // RSS Feed operations
   fetchFeed: (url) => ipcRenderer.invoke('fetch-feed', url),
   

@@ -21,6 +21,7 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 - **Keyboard shortcuts** - Navigate efficiently with vim-like keyboard controls
 - **Image toggle** - Show or hide images in article previews
 - **Toast notifications** - Visual feedback for app actions
+- **Settings** - Configure OpenAI API key and manage feature flags
 - **Automatic updates** - The app checks for updates automatically and notifies you when new versions are available
 - **Data migration** - Your data is automatically migrated when updating to new versions
 - OPML import/export support (coming soon)
@@ -127,6 +128,29 @@ The app provides visual feedback through toast notifications for various actions
 - Other user actions
 
 Notifications appear briefly at the bottom of the screen and automatically dismiss.
+
+### Settings
+
+Access the Settings area by clicking the **Settings** button (⚙️) in the sidebar footer. The Settings modal allows you to configure:
+
+#### OpenAI API Key
+
+- **Secure Storage**: Your OpenAI API key is encrypted using AES-256-GCM encryption before being stored locally
+- **Show/Hide Toggle**: Click the eye icon to reveal or hide your API key while entering it
+- **Usage**: The API key will be used for AI-powered features (when implemented)
+
+To configure your API key:
+1. Click the Settings button in the sidebar footer
+2. Enter your OpenAI API key in the "API Key" field
+3. Click "Save" to store it securely
+
+#### Feature Flags
+
+The Settings area includes a feature flag system that allows you to enable or disable specific features:
+
+- **AI Article Summary**: Enable AI-powered article summaries (coming soon)
+
+Feature flags can be toggled on or off using the toggle switches in the Settings modal. Changes are saved immediately when you click "Save".
 
 ### Feed Management
 

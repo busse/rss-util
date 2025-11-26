@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
+const crypto = require('crypto');
 const Parser = require('rss-parser');
 const { autoUpdater } = require('electron-updater');
 const migrations = require('./migrations');
@@ -13,6 +14,69 @@ const appVersion = require('./package.json').version;
 // Get user data directory and data subdirectory
 const userDataPath = app.getPath('userData');
 const dataDir = path.join(userDataPath, 'data');
+
+// Encryption utilities for API key
+const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
+const SALT = 'rss-reader-api-key-salt-v1'; // Constant salt for key derivation
+
+// Derive encryption key from userData path
+function getEncryptionKey() {
+  const keyMaterial = userDataPath + SALT;
+  return crypto.createHash('sha256').update(keyMaterial).digest();
+}
+
+// Encrypt API key
+function encryptApiKey(apiKey) {
+  if (!apiKey) return null;
+  
+  try {
+    const key = getEncryptionKey();
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, key, iv);
+    
+    let encrypted = cipher.update(apiKey, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    const authTag = cipher.getAuthTag();
+    
+    // Combine IV, authTag, and encrypted data
+    const result = {
+      iv: iv.toString('hex'),
+      authTag: authTag.toString('hex'),
+      encrypted: encrypted
+    };
+    
+    return JSON.stringify(result);
+  } catch (error) {
+    console.error('Error encrypting API key:', error);
+    return null;
+  }
+}
+
+// Decrypt API key
+function decryptApiKey(encryptedData) {
+  if (!encryptedData) return null;
+  
+  try {
+    const key = getEncryptionKey();
+    const data = JSON.parse(encryptedData);
+    
+    const iv = Buffer.from(data.iv, 'hex');
+    const authTag = Buffer.from(data.authTag, 'hex');
+    const encrypted = data.encrypted;
+    
+    const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, key, iv);
+    decipher.setAuthTag(authTag);
+    
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  } catch (error) {
+    console.error('Error decrypting API key:', error);
+    return null;
+  }
+}
 
 // Ensure data directory exists
 async function ensureDataDir() {
@@ -187,6 +251,114 @@ ipcMain.handle('write-settings', async (event, settings) => {
     return { success: true };
   } catch (error) {
     console.error('Error writing settings:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Encrypted API key operations
+ipcMain.handle('get-encrypted-api-key', async (event) => {
+  try {
+    const settingsResult = await fs.readFile(path.join(dataDir, 'settings.json'), 'utf-8').catch(() => '{}');
+    const settings = JSON.parse(settingsResult);
+    
+    if (!settings.encryptedApiKey) {
+      return { success: true, data: null };
+    }
+    
+    const decrypted = decryptApiKey(settings.encryptedApiKey);
+    return { success: true, data: decrypted };
+  } catch (error) {
+    console.error('Error getting encrypted API key:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('set-encrypted-api-key', async (event, apiKey) => {
+  try {
+    const filePath = path.join(dataDir, 'settings.json');
+    let settings = {};
+    
+    try {
+      const data = await fs.readFile(filePath, 'utf-8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    
+    if (apiKey && apiKey.trim()) {
+      const encrypted = encryptApiKey(apiKey.trim());
+      if (!encrypted) {
+        return { success: false, error: 'Failed to encrypt API key' };
+      }
+      settings.encryptedApiKey = encrypted;
+    } else {
+      // Remove API key if empty
+      delete settings.encryptedApiKey;
+    }
+    
+    await fs.writeFile(filePath, JSON.stringify(settings, null, 2), 'utf-8');
+    return { success: true };
+  } catch (error) {
+    console.error('Error setting encrypted API key:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Feature flags operations
+ipcMain.handle('get-feature-flags', async (event) => {
+  try {
+    const filePath = path.join(dataDir, 'settings.json');
+    let settings = {};
+    
+    try {
+      const data = await fs.readFile(filePath, 'utf-8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    
+    const featureFlags = settings.featureFlags || {};
+    
+    // Ensure default feature flags exist
+    if (featureFlags.aiArticleSummary === undefined) {
+      featureFlags.aiArticleSummary = false;
+    }
+    
+    return { success: true, data: featureFlags };
+  } catch (error) {
+    console.error('Error getting feature flags:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('set-feature-flag', async (event, flagName, enabled) => {
+  try {
+    const filePath = path.join(dataDir, 'settings.json');
+    let settings = {};
+    
+    try {
+      const data = await fs.readFile(filePath, 'utf-8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    
+    if (!settings.featureFlags) {
+      settings.featureFlags = {};
+    }
+    
+    settings.featureFlags[flagName] = enabled;
+    
+    await fs.writeFile(filePath, JSON.stringify(settings, null, 2), 'utf-8');
+    return { success: true };
+  } catch (error) {
+    console.error('Error setting feature flag:', error);
     return { success: false, error: error.message };
   }
 });
