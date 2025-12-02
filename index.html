@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src * 'self' data: https:; media-src * 'self' https:; frame-src * 'self' https:;">
+    content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src * 'self' data: https:; media-src * 'self' https:; frame-src * 'self' https:; connect-src 'self' https://api.openai.com;">
   <title>RSS Reader</title>
   <style>
     * {
@@ -23,6 +23,8 @@
 
     .sidebar {
       width: 280px;
+      min-width: 280px;
+      flex: 0 0 280px;
       background-color: #2c3e50;
       color: white;
       display: flex;
@@ -150,6 +152,8 @@
 
     .article-list {
       width: 350px;
+      min-width: 350px;
+      flex: 0 0 350px;
       background-color: white;
       border-right: 1px solid #ddd;
       overflow-y: auto;
@@ -189,9 +193,16 @@
 
     .article-preview {
       flex: 1;
+      min-width: 0;
       padding: 30px;
       overflow-y: auto;
+      overflow-x: hidden;
       background-color: white;
+    }
+
+    .article-preview > * {
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .article-preview-header {
@@ -254,6 +265,118 @@
 
     .article-preview-meta a:hover {
       text-decoration: underline;
+    }
+
+    /* AI Article Summary Styles */
+    .ai-summary-container {
+      background-color: #e3f2fd; /* Light blue to denote AI content */
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      border: 1px solid #bbdefb;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+    }
+
+    .ai-summary-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1565c0;
+      margin-bottom: 8px;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      max-width: 100%;
+    }
+
+    .ai-summary-title a {
+      color: #1565c0;
+      text-decoration: none;
+    }
+
+    .ai-summary-title a:hover {
+      text-decoration: underline;
+    }
+
+    .ai-summary-meta {
+      font-size: 13px;
+      color: #5e92c7;
+      margin-bottom: 12px;
+    }
+
+    .ai-summary-meta a {
+      color: #1976d2;
+      text-decoration: none;
+    }
+
+    .ai-summary-meta a:hover {
+      text-decoration: underline;
+    }
+
+    .ai-summary-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #37474f;
+      margin-bottom: 12px;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      max-width: 100%;
+    }
+
+    .ai-summary-footnotes {
+      font-size: 13px;
+      color: #546e7a;
+      padding-top: 10px;
+      border-top: 1px solid #bbdefb;
+      margin-bottom: 12px;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+    }
+
+    .ai-summary-footnotes-list {
+      list-style: none;
+      margin: 8px 0 0 0;
+      padding: 0;
+    }
+
+    .ai-summary-footnotes-list li {
+      margin-bottom: 4px;
+    }
+
+    .ai-summary-footnotes a {
+      color: #1976d2;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .ai-summary-footnotes a:hover {
+      text-decoration: underline;
+    }
+
+    .ai-summary-disclaimer {
+      font-size: 11px;
+      color: #90a4ae;
+      font-style: italic;
+      padding-top: 8px;
+      border-top: 1px solid #bbdefb;
+    }
+
+    .ai-summary-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 60px;
+      color: #1565c0;
+      font-size: 14px;
+    }
+
+    .ai-summary-error {
+      color: #c62828;
+      font-size: 14px;
+      padding: 10px;
     }
 
     .empty-state {
@@ -936,6 +1059,7 @@
     let selectedArticleId = null;
     let showImages = true;
     let isSidebarVisible = true;
+    let featureFlags = {};
 
     // DOM Elements
     const sidebar = document.querySelector('.sidebar');
@@ -1230,7 +1354,192 @@
       }).join('');
     }
 
-    function renderArticlePreview(article) {
+    // AI Summary State and Functions
+    // Load feature flags on startup
+    async function loadFeatureFlags() {
+      try {
+        if (window.electronAPI && window.electronAPI.getFeatureFlags) {
+          const result = await window.electronAPI.getFeatureFlags();
+          if (result.success) {
+            featureFlags = result.data;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading feature flags:', error);
+      }
+    }
+
+    // Generate AI Summary using OpenAI API
+    async function generateAISummary(article) {
+      try {
+        // Get API key
+        const apiKeyResult = await window.electronAPI.getEncryptedApiKey();
+        if (!apiKeyResult.success || !apiKeyResult.data) {
+          return { error: 'No API key configured. Please add your OpenAI API key in Settings.' };
+        }
+        const apiKey = apiKeyResult.data;
+        
+        // Prepare article content (strip HTML for cleaner input)
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = article.content || article.description || '';
+        const plainTextContent = tempDiv.textContent || tempDiv.innerText || '';
+        
+        // Truncate if too long (keep under ~4000 chars for API)
+        const truncatedContent = plainTextContent.substring(0, 4000);
+        const prompt = `You are a helpful assistant that summarizes articles. Given the following article, provide:
+
+1. A one-paragraph summary (2-4 sentences) of the key points
+
+2. Up to 5 key hyperlinks mentioned in the article as numbered footnotes
+
+Article Title: ${article.title || 'Untitled'}
+
+Author: ${article.author || 'Unknown'}
+
+Source: ${article.feedTitle || 'Unknown'}
+
+Article Content:
+
+${truncatedContent}
+
+Respond in JSON format:
+
+{
+  "summary": "Your summary paragraph here with footnote references like [1], [2] where relevant",
+  "footnotes": [
+    {"title": "Link Title", "url": "https://example.com"},
+    ...
+  ]
+}`;
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+            max_tokens: 500
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+        
+        // Parse JSON response
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('Invalid response format from AI');
+        }
+        
+        const parsed = JSON.parse(jsonMatch[0]);
+        
+        return {
+          summary: parsed.summary,
+          footnotes: parsed.footnotes || [],
+          generatedAt: new Date().toISOString()
+        };
+      } catch (error) {
+        console.error('Error generating AI summary:', error);
+        return { error: error.message };
+      }
+    }
+
+    // Render AI Summary HTML
+    function renderAISummaryHTML(article, summaryData) {
+      if (summaryData.error) {
+        return `
+          <div class="ai-summary-container">
+            <div class="ai-summary-error">⚠️ ${escapeHtml(summaryData.error)}</div>
+          </div>
+        `;
+      }
+
+      // Build title with link
+      const titleHtml = article.link 
+        ? `<a href="${escapeHtml(article.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(article.title || 'Untitled')}</a>`
+        : escapeHtml(article.title || 'Untitled');
+
+      // Build meta line with links
+      const authorHtml = article.author 
+        ? (article.authorLink 
+            ? `<a href="${escapeHtml(article.authorLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(article.author)}</a>`
+            : escapeHtml(article.author))
+        : 'Unknown Author';
+      
+      // Try to get site URL from article link or find feed URL
+      let siteUrl = null;
+      if (article.link) {
+        try {
+          siteUrl = new URL(article.link).origin;
+        } catch (e) {
+          // Invalid URL, ignore
+        }
+      }
+      // If no URL from article link, try to find feed URL
+      if (!siteUrl && article.feedId) {
+        const feed = feeds.find(f => f.id === article.feedId);
+        if (feed && feed.url) {
+          try {
+            siteUrl = new URL(feed.url).origin;
+          } catch (e) {
+            // Invalid URL, ignore
+          }
+        }
+      }
+      
+      const siteHtml = siteUrl
+        ? `<a href="${escapeHtml(siteUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(article.feedTitle || 'Unknown Site')}</a>`
+        : escapeHtml(article.feedTitle || 'Unknown Site');
+
+      // Build footnotes
+      let footnotesHtml = '';
+      if (summaryData.footnotes && summaryData.footnotes.length > 0) {
+        const footnotesItems = summaryData.footnotes.map((fn, i) => 
+          `<li>[${i + 1}] ${escapeHtml(fn.title || 'Link')}: <a href="${escapeHtml(fn.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(fn.url)}</a></li>`
+        ).join('');
+        footnotesHtml = `
+          <div class="ai-summary-footnotes">
+            <strong>References:</strong>
+            <ul class="ai-summary-footnotes-list">${footnotesItems}</ul>
+          </div>
+        `;
+      }
+
+      // Format timestamp
+      const timestamp = summaryData.generatedAt 
+        ? new Date(summaryData.generatedAt).toLocaleString()
+        : 'Unknown time';
+
+      return `
+        <div class="ai-summary-container">
+          <div class="ai-summary-title">${titleHtml}</div>
+          <div class="ai-summary-meta">${authorHtml} | ${siteHtml}</div>
+          <div class="ai-summary-text">${escapeHtml(summaryData.summary)}</div>
+          ${footnotesHtml}
+          <div class="ai-summary-disclaimer">🤖 AI-generated summary • Generated: ${escapeHtml(timestamp)}</div>
+        </div>
+      `;
+    }
+
+    // Render loading state
+    function renderAISummaryLoading() {
+      return `
+        <div class="ai-summary-container">
+          <div class="ai-summary-loading">🔄 Generating AI summary...</div>
+        </div>
+      `;
+    }
+
+    async function renderArticlePreview(article) {
       if (!article) {
         articlePreview.innerHTML = `
           <div class="empty-state">
@@ -1245,14 +1554,12 @@
       const author = article.author ? ` • ${escapeHtml(article.author)}` : '';
 
       // Use content if available, otherwise description
-      // Content from RSS is typically HTML (from content:encoded), description is usually plain text
       let content = article.content || article.description || '<p>No content available.</p>';
-      // If description is used and doesn't look like HTML, wrap it in a paragraph
       if (!article.content && article.description && !article.description.trim().startsWith('<')) {
         content = `<p>${escapeHtml(article.description)}</p>`;
       }
 
-      articlePreview.innerHTML = `
+      const articleContentHtml = `
         <div class="article-preview-header">
           <h1 class="article-preview-title">${escapeHtml(article.title || 'Untitled')}</h1>
           <div class="article-preview-meta">
@@ -1262,6 +1569,51 @@
         </div>
         <div class="article-preview-content">${content}</div>
       `;
+
+      // Check if AI Summary feature is enabled
+      if (featureFlags.aiArticleSummary) {
+        // Check for cached summary first
+        let summaryData = null;
+        if (window.electronAPI && window.electronAPI.readAISummary) {
+          const cachedResult = await window.electronAPI.readAISummary(article.id);
+          if (cachedResult.success && cachedResult.data) {
+            summaryData = cachedResult.data;
+          }
+        }
+
+        if (summaryData) {
+          // Use cached summary
+          articlePreview.innerHTML = `
+            ${renderAISummaryHTML(article, summaryData)}
+            ${articleContentHtml}
+          `;
+        } else {
+          // Show loading state and generate summary
+          articlePreview.innerHTML = `
+            ${renderAISummaryLoading()}
+            ${articleContentHtml}
+          `;
+          // Generate AI summary asynchronously
+          summaryData = await generateAISummary(article);
+          
+          // Cache the summary (even errors, to avoid repeated failed requests)
+          if (window.electronAPI && window.electronAPI.writeAISummary) {
+            await window.electronAPI.writeAISummary(article.id, summaryData);
+          }
+
+          // Update the display with the generated summary
+          // Only update if this is still the selected article
+          if (selectedArticleId === article.id) {
+            articlePreview.innerHTML = `
+              ${renderAISummaryHTML(article, summaryData)}
+              ${articleContentHtml}
+            `;
+          }
+        }
+      } else {
+        // Feature flag disabled - show normal article preview
+        articlePreview.innerHTML = articleContentHtml;
+      }
     }
 
     // Event Handlers
@@ -1273,7 +1625,7 @@
       renderFeeds();
       renderCategories();
       renderArticles();
-      renderArticlePreview(null);
+      await renderArticlePreview(null);
     }
 
     async function handleArticleSelection(articleId) {
@@ -1299,7 +1651,7 @@
         }
 
         renderArticles();
-        renderArticlePreview(article);
+        await renderArticlePreview(article);
       }
     }
 
@@ -1623,7 +1975,7 @@
         {
           name: 'aiArticleSummary',
           label: 'AI Article Summary',
-          description: 'Enable AI-powered article summaries (coming soon)'
+          description: 'Display AI-generated article summaries above the article preview (requires OpenAI API key)'
         }
       ];
 
@@ -1671,6 +2023,9 @@
           }
         }
 
+        // Reload feature flags to update UI immediately
+        await loadFeatureFlags();
+        
         showToast('Settings saved');
         return true;
       } catch (error) {
@@ -1820,13 +2175,14 @@
 
     // Initialize application
     async function init() {
+      await loadFeatureFlags(); // Load feature flags first
       await Promise.all([loadFeeds(), loadCategories(), loadReadStates()]);
       await loadAllArticles();
 
       renderFeeds();
       renderCategories();
       renderArticles();
-      renderArticlePreview(null);
+      await renderArticlePreview(null);
       updateImageToggleUI();
     }
 
