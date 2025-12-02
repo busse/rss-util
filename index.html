@@ -23,6 +23,8 @@
 
     .sidebar {
       width: 280px;
+      min-width: 280px;
+      flex: 0 0 280px;
       background-color: #2c3e50;
       color: white;
       display: flex;
@@ -150,6 +152,8 @@
 
     .article-list {
       width: 350px;
+      min-width: 350px;
+      flex: 0 0 350px;
       background-color: white;
       border-right: 1px solid #ddd;
       overflow-y: auto;
@@ -189,9 +193,16 @@
 
     .article-preview {
       flex: 1;
+      min-width: 0;
       padding: 30px;
       overflow-y: auto;
+      overflow-x: hidden;
       background-color: white;
+    }
+
+    .article-preview > * {
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .article-preview-header {
@@ -262,10 +273,12 @@
       border-radius: 8px;
       padding: 20px;
       margin-bottom: 15px;
-      height: calc(33.33% - 15px); /* 1/3 of available height minus margin */
-      overflow-y: auto; /* Scrollable if content is long */
       border: 1px solid #bbdefb;
-      flex-shrink: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
     }
 
     .ai-summary-title {
@@ -273,6 +286,9 @@
       font-weight: 600;
       color: #1565c0;
       margin-bottom: 8px;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      max-width: 100%;
     }
 
     .ai-summary-title a {
@@ -304,6 +320,9 @@
       line-height: 1.6;
       color: #37474f;
       margin-bottom: 12px;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      max-width: 100%;
     }
 
     .ai-summary-footnotes {
@@ -312,14 +331,18 @@
       padding-top: 10px;
       border-top: 1px solid #bbdefb;
       margin-bottom: 12px;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
     }
 
-    .ai-summary-footnotes ol {
-      margin: 8px 0 0 20px;
+    .ai-summary-footnotes-list {
+      list-style: none;
+      margin: 8px 0 0 0;
       padding: 0;
     }
 
-    .ai-summary-footnotes li {
+    .ai-summary-footnotes-list li {
       margin-bottom: 4px;
     }
 
@@ -345,7 +368,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100%;
+      min-height: 60px;
       color: #1565c0;
       font-size: 14px;
     }
@@ -354,25 +377,6 @@
       color: #c62828;
       font-size: 14px;
       padding: 10px;
-    }
-
-    /* Adjust article preview when AI summary is visible */
-    .article-preview-wrapper {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    .article-preview-content-area {
-      flex: 1;
-      overflow-y: auto;
-      min-height: 0; /* Important for flex overflow */
-    }
-
-    /* When AI summary is shown, article content takes 2/3 */
-    .article-preview.with-ai-summary .article-preview-content-area {
-      height: 66.67%;
     }
 
     .empty-state {
@@ -1505,7 +1509,7 @@ Respond in JSON format:
         footnotesHtml = `
           <div class="ai-summary-footnotes">
             <strong>References:</strong>
-            <ol>${footnotesItems}</ol>
+            <ul class="ai-summary-footnotes-list">${footnotesItems}</ul>
           </div>
         `;
       }
@@ -1543,7 +1547,6 @@ Respond in JSON format:
             <div class="empty-state-text">Select an article to read</div>
           </div>
         `;
-        articlePreview.classList.remove('with-ai-summary');
         return;
       }
 
@@ -1569,8 +1572,6 @@ Respond in JSON format:
 
       // Check if AI Summary feature is enabled
       if (featureFlags.aiArticleSummary) {
-        articlePreview.classList.add('with-ai-summary');
-        
         // Check for cached summary first
         let summaryData = null;
         if (window.electronAPI && window.electronAPI.readAISummary) {
@@ -1583,22 +1584,14 @@ Respond in JSON format:
         if (summaryData) {
           // Use cached summary
           articlePreview.innerHTML = `
-            <div class="article-preview-wrapper">
-              ${renderAISummaryHTML(article, summaryData)}
-              <div class="article-preview-content-area">
-                ${articleContentHtml}
-              </div>
-            </div>
+            ${renderAISummaryHTML(article, summaryData)}
+            ${articleContentHtml}
           `;
         } else {
           // Show loading state and generate summary
           articlePreview.innerHTML = `
-            <div class="article-preview-wrapper">
-              ${renderAISummaryLoading()}
-              <div class="article-preview-content-area">
-                ${articleContentHtml}
-              </div>
-            </div>
+            ${renderAISummaryLoading()}
+            ${articleContentHtml}
           `;
           // Generate AI summary asynchronously
           summaryData = await generateAISummary(article);
@@ -1612,18 +1605,13 @@ Respond in JSON format:
           // Only update if this is still the selected article
           if (selectedArticleId === article.id) {
             articlePreview.innerHTML = `
-              <div class="article-preview-wrapper">
-                ${renderAISummaryHTML(article, summaryData)}
-                <div class="article-preview-content-area">
-                  ${articleContentHtml}
-                </div>
-              </div>
+              ${renderAISummaryHTML(article, summaryData)}
+              ${articleContentHtml}
             `;
           }
         }
       } else {
         // Feature flag disabled - show normal article preview
-        articlePreview.classList.remove('with-ai-summary');
         articlePreview.innerHTML = articleContentHtml;
       }
     }
