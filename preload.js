@@ -39,6 +39,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getFeatureFlags: () => ipcRenderer.invoke('get-feature-flags'),
   setFeatureFlag: (flagName, enabled) => ipcRenderer.invoke('set-feature-flag', flagName, enabled),
   
+  // AI Summary operations
+  readAISummary: (articleId) => ipcRenderer.invoke('read-ai-summary', articleId),
+  writeAISummary: (articleId, summaryData) => ipcRenderer.invoke('write-ai-summary', articleId, summaryData),
+  
   // RSS Feed operations
   fetchFeed: (url) => ipcRenderer.invoke('fetch-feed', url),
   

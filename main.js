@@ -363,6 +363,42 @@ ipcMain.handle('set-feature-flag', async (event, flagName, enabled) => {
   }
 });
 
+// AI Summary operations - store summaries by article ID
+ipcMain.handle('read-ai-summary', async (event, articleId) => {
+  const filePath = path.join(dataDir, 'ai-summaries.json');
+  try {
+    const data = await fs.readFile(filePath, 'utf-8');
+    const summaries = JSON.parse(data);
+    return { success: true, data: summaries[articleId] || null };
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return { success: true, data: null };
+    }
+    console.error('Error reading AI summary:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('write-ai-summary', async (event, articleId, summaryData) => {
+  const filePath = path.join(dataDir, 'ai-summaries.json');
+  try {
+    let summaries = {};
+    try {
+      const existingData = await fs.readFile(filePath, 'utf-8');
+      summaries = JSON.parse(existingData);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+    
+    summaries[articleId] = summaryData;
+    await fs.writeFile(filePath, JSON.stringify(summaries, null, 2), 'utf-8');
+    return { success: true };
+  } catch (error) {
+    console.error('Error writing AI summary:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // RSS Feed operations
 const parser = new Parser({
   customFields: {
