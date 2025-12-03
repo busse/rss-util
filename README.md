@@ -13,18 +13,39 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 
 ## Features
 
-- Clean, intuitive three-panel interface
-- Organize feeds into custom categories/folders
-- Track read/unread status of articles
-- Automatic feed refresh on startup
-- Feed health monitoring
-- **Keyboard shortcuts** - Navigate efficiently with vim-like keyboard controls
-- **Image toggle** - Show or hide images in article previews
-- **Toast notifications** - Visual feedback for app actions
-- **Settings** - Configure OpenAI API key and manage feature flags
-- **Automatic updates** - The app checks for updates automatically and notifies you when new versions are available
-- **Data migration** - Your data is automatically migrated when updating to new versions
-- OPML import/export support (coming soon)
+### Core Functionality
+- **Three-panel interface** - Clean, intuitive layout with sidebar, article list, and preview pane
+- **Feed subscriptions** - Add, edit, and delete RSS feed subscriptions
+- **Category organization** - Organize feeds into custom categories/folders with custom icons
+- **Read/unread tracking** - Automatic tracking of article read status with visual indicators
+- **Unread counts** - Badge indicators showing unread article counts per feed and category
+- **All Articles view** - View all articles from all feeds in chronological order
+- **Feed health monitoring** - Visual status indicators for feed health (healthy/error states)
+- **Automatic feed refresh** - Feeds are automatically refreshed on app startup
+
+### User Experience
+- **Keyboard shortcuts** - Vim-like navigation with J/K for article navigation, V to open in browser, R to refresh
+- **Sidebar toggle** - Collapse/expand sidebar with `[` and `]` keys for more reading space
+- **Image toggle** - Show or hide images in article previews for faster loading or cleaner reading
+- **Toast notifications** - Non-intrusive visual feedback for app actions
+- **Article preview** - Full article content display with proper HTML rendering
+- **External links** - Open articles in your default browser with a single keypress
+
+### Settings & Configuration
+- **OpenAI API key management** - Secure, encrypted storage of API keys using AES-256-GCM
+- **Feature flags** - Toggle individual features on/off to customize your experience
+- **Settings modal** - Centralized configuration interface accessible from the sidebar
+
+### AI Features
+- **AI Article Summary** - Generate AI-powered article summaries using OpenAI (requires API key and feature flag)
+
+### Updates & Data Management
+- **Automatic updates** - Background update checking and installation via electron-updater
+- **Data migration** - Automatic data structure migrations when updating to new versions
+- **Data persistence** - All feeds, articles, settings, and read states are stored locally
+
+### Coming Soon
+- OPML import/export support
 
 ## Prerequisites
 
@@ -285,13 +306,16 @@ Migrations should be **idempotent** (safe to run multiple times) and should pres
 
 ## Contributing
 
-We welcome contributions! If you have ideas for new features, improvements, or bug fixes, please:
+We welcome contributions! This project is **pro-AI-assisted coding and engineering** - we encourage and welcome contributions that leverage AI tools like GitHub Copilot, ChatGPT, Cursor, or any other AI coding assistants. If you used AI assistance in your contribution, that's great! Please mention it in your pull request.
 
-1. **Request Features**: Open an issue on GitHub using the [Issues tab](https://github.com/yourusername/rss-util/issues) and describe the feature you'd like to see
-2. **Report Bugs**: If you encounter any issues, please report them via the Issues tab
-3. **Submit Pull Requests**: If you'd like to contribute code, fork the repository, make your changes, and submit a pull request
+For detailed contribution guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Your feedback and contributions help make rss-util better for everyone!
+Quick start:
+1. **Request Features**: Open an issue on GitHub and describe the feature you'd like to see
+2. **Report Bugs**: Report issues via the Issues tab
+3. **Submit Pull Requests**: Fork the repository, make your changes, and submit a pull request
+
+**Important**: All new features must include feature flags in the Settings so users can opt-in or opt-out. See CONTRIBUTING.md for details.
 
 ## License
 
