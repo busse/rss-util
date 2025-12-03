@@ -36,8 +36,12 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 - **Feature flags** - Toggle individual features on/off to customize your experience
 - **Settings modal** - Centralized configuration interface accessible from the sidebar
 
+![Settings](screenshots/settings.png)
+
 ### AI Features
 - **AI Article Summary** - Generate AI-powered article summaries using OpenAI (requires API key and feature flag)
+
+![AI Article Summary](screenshots/ai-summary.png)
 
 ### Updates & Data Management
 - **Automatic updates** - Background update checking and installation via electron-updater
@@ -169,7 +173,7 @@ To configure your API key:
 
 The Settings area includes a feature flag system that allows you to enable or disable specific features:
 
-- **AI Article Summary**: Enable AI-powered article summaries (coming soon)
+- **AI Article Summary**: Enable AI-powered article summaries
 
 Feature flags can be toggled on or off using the toggle switches in the Settings modal. Changes are saved immediately when you click "Save".
 
