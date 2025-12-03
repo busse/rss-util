@@ -7,6 +7,7 @@
     "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "screenshots": "node scripts/screenshot.js",
+    "screenshots:real": "node scripts/screenshot-electron.js",
     "build": "electron-builder",
     "build:mac": "electron-builder --mac",
     "release": "electron-builder --publish=never",
