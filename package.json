@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "playwright test",
+    "test:watch": "playwright test --watch",
     "screenshots": "node scripts/screenshot.js",
     "screenshots:real": "node scripts/screenshot-electron.js",
     "build": "electron-builder",
@@ -28,6 +29,7 @@
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "electron": "^35.7.5",
     "electron-builder": "^26.0.12",
     "playwright": "^1.57.0"
