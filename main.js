@@ -420,6 +420,57 @@ ipcMain.handle('get-mirror-directory', async (event) => {
   }
 });
 
+ipcMain.handle('get-sync-as-markdown', async (event) => {
+  try {
+    const filePath = path.join(dataDir, 'settings.json');
+    let settings = {};
+    
+    try {
+      const data = await fs.readFile(filePath, 'utf-8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    
+    // Default to true (enabled) when dataMirror is enabled
+    const syncAsMarkdown = settings.syncAsMarkdown !== undefined ? settings.syncAsMarkdown : true;
+    return { success: true, data: syncAsMarkdown };
+  } catch (error) {
+    console.error('Error getting syncAsMarkdown setting:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('set-sync-as-markdown', async (event, enabled) => {
+  try {
+    const filePath = path.join(dataDir, 'settings.json');
+    let settings = {};
+    
+    try {
+      const data = await fs.readFile(filePath, 'utf-8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    
+    settings.syncAsMarkdown = enabled;
+    
+    await fs.writeFile(filePath, JSON.stringify(settings, null, 2), 'utf-8');
+    // Trigger sync after changing the setting
+    if (settings.featureFlags?.dataMirror && settings.mirrorDirectory) {
+      triggerMirrorSync();
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('Error setting syncAsMarkdown:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('set-mirror-directory', async (event, mirrorDirectory) => {
   try {
     const filePath = path.join(dataDir, 'settings.json');
@@ -457,6 +508,143 @@ function triggerMirrorSync() {
   syncToMirror().catch(err => console.error('Mirror sync error:', err));
 }
 
+// Helper function to strip HTML tags and decode entities safely
+function stripHtml(html) {
+  if (!html) return '';
+  // Repeatedly remove HTML tags until none remain (handles nested/malformed tags)
+  let text = html;
+  let previous = '';
+  while (previous !== text) {
+    previous = text;
+    text = text.replace(/<[^>]*>/g, '');
+  }
+  // Decode common HTML entities (in correct order - &amp; last to avoid double-decoding)
+  text = text.replace(/&lt;/g, '<');
+  text = text.replace(/&gt;/g, '>');
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+  text = text.replace(/&nbsp;/g, ' ');
+  text = text.replace(/&amp;/g, '&');
+  // Normalize whitespace
+  text = text.replace(/\s+/g, ' ').trim();
+  return text;
+}
+
+// Helper function to escape a string for YAML double-quoted strings
+function escapeYamlString(str) {
+  if (!str) return '';
+  // Escape backslashes first, then double quotes, then newlines
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
+}
+
+// Helper function to convert article to Markdown with Obsidian frontmatter
+function articleToMarkdown(article, feedTitle, readState) {
+  const frontmatter = {
+    title: article.title || 'Untitled',
+    link: article.link || '',
+    author: article.author || '',
+    feed: feedTitle || '',
+    pubDate: article.pubDate || '',
+    read: readState?.read || false,
+    readAt: readState?.readAt || '',
+    tags: article.categories || [],
+    type: 'article'
+  };
+  
+  // Build YAML frontmatter with proper escaping
+  let yaml = '---\n';
+  yaml += `title: "${escapeYamlString(frontmatter.title)}"\n`;
+  yaml += `link: "${escapeYamlString(frontmatter.link)}"\n`;
+  yaml += `author: "${escapeYamlString(frontmatter.author)}"\n`;
+  yaml += `feed: "${escapeYamlString(frontmatter.feed)}"\n`;
+  yaml += `pubDate: "${escapeYamlString(frontmatter.pubDate)}"\n`;
+  yaml += `read: ${frontmatter.read}\n`;
+  if (frontmatter.readAt) {
+    yaml += `readAt: "${escapeYamlString(frontmatter.readAt)}"\n`;
+  }
+  if (frontmatter.tags && frontmatter.tags.length > 0) {
+    yaml += `tags:\n`;
+    frontmatter.tags.forEach(tag => {
+      yaml += `  - "${escapeYamlString(tag || '')}"\n`;
+    });
+  }
+  yaml += `type: article\n`;
+  yaml += '---\n\n';
+  
+  // Add article title as heading
+  let content = `# ${article.title || 'Untitled'}\n\n`;
+  
+  // Add link to original
+  if (article.link) {
+    content += `[View Original Article](${article.link})\n\n`;
+  }
+  
+  // Add description/summary
+  if (article.description) {
+    content += `## Summary\n\n${stripHtml(article.description)}\n\n`;
+  }
+  
+  // Add full content (converted from HTML to plain text)
+  if (article.content) {
+    content += `## Content\n\n${stripHtml(article.content)}\n`;
+  }
+  
+  return yaml + content;
+}
+
+// Helper function to convert feed to Markdown with Obsidian frontmatter
+function feedToMarkdown(feed) {
+  let yaml = '---\n';
+  yaml += `title: "${escapeYamlString(feed.title || 'Untitled Feed')}"\n`;
+  yaml += `url: "${escapeYamlString(feed.url || '')}"\n`;
+  yaml += `category: "${escapeYamlString(feed.category || '')}"\n`;
+  yaml += `icon: "${escapeYamlString(feed.icon || '')}"\n`;
+  yaml += `lastUpdated: "${escapeYamlString(feed.lastUpdated || '')}"\n`;
+  yaml += `status: "${escapeYamlString(feed.status || '')}"\n`;
+  yaml += `type: feed\n`;
+  yaml += '---\n\n';
+  
+  let content = `# ${feed.title || 'Untitled Feed'}\n\n`;
+  content += `**URL:** ${feed.url || 'N/A'}\n\n`;
+  content += `**Status:** ${feed.status || 'unknown'}\n\n`;
+  if (feed.lastUpdated) {
+    content += `**Last Updated:** ${feed.lastUpdated}\n\n`;
+  }
+  
+  return yaml + content;
+}
+
+// Helper function to convert category to Markdown with Obsidian frontmatter
+function categoryToMarkdown(category) {
+  let yaml = '---\n';
+  yaml += `name: "${escapeYamlString(category.name || 'Untitled Category')}"\n`;
+  yaml += `icon: "${escapeYamlString(category.icon || '')}"\n`;
+  yaml += `type: category\n`;
+  yaml += '---\n\n';
+  
+  let content = `# ${category.icon || '📁'} ${category.name || 'Untitled Category'}\n\n`;
+  content += `This is a category/folder for organizing RSS feeds.\n`;
+  
+  return yaml + content;
+}
+
+// Helper function to sanitize filename for file system
+function sanitizeFilename(name) {
+  if (!name) return 'untitled';
+  // Remove or replace invalid characters
+  return name
+    .replace(/[<>:"/\\|?*]/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .substring(0, 100) || 'untitled';
+}
+
 // Helper function to sync data to mirror directory
 async function syncToMirror() {
   try {
@@ -480,6 +668,7 @@ async function syncToMirror() {
     }
     
     const mirrorDir = settings.mirrorDirectory;
+    const syncAsMarkdown = settings.syncAsMarkdown !== false; // Default to true
     
     // Ensure mirror directory exists
     await fs.mkdir(mirrorDir, { recursive: true });
@@ -487,24 +676,108 @@ async function syncToMirror() {
     // Get all files in the data directory
     const files = await fs.readdir(dataDir);
     
-    // Copy JSON files to mirror directory in parallel
-    const copyPromises = files
-      .filter(file => file.endsWith('.json'))
-      .map(async (file) => {
-        const sourcePath = path.join(dataDir, file);
-        const destPath = path.join(mirrorDir, file);
-        
-        try {
-          const content = await fs.readFile(sourcePath, 'utf-8');
-          await fs.writeFile(destPath, content, 'utf-8');
-        } catch (error) {
-          console.error(`Error copying ${file} to mirror:`, error);
+    if (syncAsMarkdown) {
+      // Create subdirectories for organized Markdown files
+      const articlesDir = path.join(mirrorDir, 'articles');
+      const feedsDir = path.join(mirrorDir, 'feeds');
+      const categoriesDir = path.join(mirrorDir, 'categories');
+      
+      await Promise.all([
+        fs.mkdir(articlesDir, { recursive: true }),
+        fs.mkdir(feedsDir, { recursive: true }),
+        fs.mkdir(categoriesDir, { recursive: true })
+      ]);
+      
+      // Load read states for article metadata
+      let readStates = {};
+      try {
+        const readStatesData = await fs.readFile(path.join(dataDir, 'read-states.json'), 'utf-8');
+        readStates = JSON.parse(readStatesData);
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          console.error('Error reading read states:', error);
         }
-      });
-    
-    await Promise.all(copyPromises);
-    
-    console.log('Data synced to mirror directory:', mirrorDir);
+      }
+      
+      // Load feeds for reference
+      let feeds = [];
+      try {
+        const feedsData = await fs.readFile(path.join(dataDir, 'feeds.json'), 'utf-8');
+        feeds = JSON.parse(feedsData);
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          console.error('Error reading feeds:', error);
+        }
+      }
+      
+      // Process files and convert to Markdown
+      const syncPromises = files
+        .filter(file => file.endsWith('.json'))
+        .map(async (file) => {
+          const sourcePath = path.join(dataDir, file);
+          
+          try {
+            const content = await fs.readFile(sourcePath, 'utf-8');
+            const data = JSON.parse(content);
+            
+            if (file === 'feeds.json' && Array.isArray(data)) {
+              // Convert each feed to a Markdown file
+              const feedPromises = data.map(async (feed) => {
+                const mdContent = feedToMarkdown(feed);
+                const filename = sanitizeFilename(feed.title || feed.id) + '.md';
+                await fs.writeFile(path.join(feedsDir, filename), mdContent, 'utf-8');
+              });
+              await Promise.all(feedPromises);
+            } else if (file === 'categories.json' && Array.isArray(data)) {
+              // Convert each category to a Markdown file
+              const catPromises = data.map(async (category) => {
+                const mdContent = categoryToMarkdown(category);
+                const filename = sanitizeFilename(category.name || category.id) + '.md';
+                await fs.writeFile(path.join(categoriesDir, filename), mdContent, 'utf-8');
+              });
+              await Promise.all(catPromises);
+            } else if (file.startsWith('articles-') && data.articles) {
+              // Convert each article to a Markdown file
+              const feed = feeds.find(f => f.id === data.feedId);
+              const feedTitle = feed?.title || 'Unknown Feed';
+              const feedFolder = path.join(articlesDir, sanitizeFilename(feedTitle));
+              await fs.mkdir(feedFolder, { recursive: true });
+              
+              const articlePromises = data.articles.map(async (article) => {
+                const readState = readStates[article.id];
+                const mdContent = articleToMarkdown(article, feedTitle, readState);
+                const filename = sanitizeFilename(article.title || article.id) + '.md';
+                await fs.writeFile(path.join(feedFolder, filename), mdContent, 'utf-8');
+              });
+              await Promise.all(articlePromises);
+            }
+            // Skip other files like settings.json, read-states.json, ai-summaries.json in Markdown mode
+          } catch (error) {
+            console.error(`Error converting ${file} to Markdown:`, error);
+          }
+        });
+      
+      await Promise.all(syncPromises);
+      console.log('Data synced to mirror directory as Markdown:', mirrorDir);
+    } else {
+      // Copy JSON files to mirror directory in parallel (original behavior)
+      const copyPromises = files
+        .filter(file => file.endsWith('.json'))
+        .map(async (file) => {
+          const sourcePath = path.join(dataDir, file);
+          const destPath = path.join(mirrorDir, file);
+          
+          try {
+            const content = await fs.readFile(sourcePath, 'utf-8');
+            await fs.writeFile(destPath, content, 'utf-8');
+          } catch (error) {
+            console.error(`Error copying ${file} to mirror:`, error);
+          }
+        });
+      
+      await Promise.all(copyPromises);
+      console.log('Data synced to mirror directory as JSON:', mirrorDir);
+    }
   } catch (error) {
     console.error('Error syncing to mirror:', error);
   }

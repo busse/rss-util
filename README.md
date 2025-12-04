@@ -184,12 +184,39 @@ Feature flags can be toggled on or off using the toggle switches in the Settings
 When the Data Mirror feature flag is enabled, a new section appears in Settings that allows you to:
 
 1. **Select a Mirror Directory**: Click "Browse..." to choose a directory where all RSS data will be mirrored
-2. **Clear Directory**: Click the "✕" button to clear the selected directory
-3. **Sync Now**: Manually trigger a sync of all data to the mirror directory
+2. **Sync as Markdown**: Toggle to convert data to Markdown files with Obsidian-compatible frontmatter (enabled by default)
+3. **Clear Directory**: Click the "✕" button to clear the selected directory
+4. **Sync Now**: Manually trigger a sync of all data to the mirror directory
 
-The data is automatically synced to the mirror directory whenever any data changes (feeds, articles, read states, settings, etc.). This is useful for integration with personal knowledge management tools like Obsidian, Notion, or any other tool that can read JSON files.
+The data is automatically synced to the mirror directory whenever any data changes (feeds, articles, read states, settings, etc.). This is useful for integration with personal knowledge management tools like Obsidian, Notion, or any other tool that can read Markdown or JSON files.
 
-**Mirrored Files:**
+**Sync as Markdown Mode (Default):**
+
+When "Sync as Markdown" is enabled, the mirrored data is organized into folders and converted to Markdown files with [Obsidian-compatible frontmatter properties](https://help.obsidian.md/properties):
+
+- `articles/{feed-name}/` - Individual article files with title, link, author, pubDate, read status, and tags in frontmatter
+- `feeds/` - Feed subscription files with URL, status, and category info
+- `categories/` - Category/folder files
+
+Each Markdown file includes YAML frontmatter with properties like:
+```yaml
+---
+title: "Article Title"
+link: "https://example.com/article"
+author: "Author Name"
+feed: "Feed Name"
+pubDate: "2024-01-15T10:30:00Z"
+read: true
+tags:
+  - "Technology"
+  - "News"
+type: article
+---
+```
+
+**JSON Mode:**
+
+When "Sync as Markdown" is disabled, the following JSON files are mirrored directly:
 - `feeds.json` - Feed subscriptions
 - `categories.json` - Category/folder organization
 - `read-states.json` - Article read status

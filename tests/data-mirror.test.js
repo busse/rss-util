@@ -74,6 +74,8 @@ test.describe('Data Mirror Feature', () => {
         selectMirrorDirectory: async () => ({ success: true, data: '/test/mirror/directory' }),
         getMirrorDirectory: async () => ({ success: true, data: '/existing/mirror/path' }),
         setMirrorDirectory: async (mirrorDirectory) => ({ success: true }),
+        getSyncAsMarkdown: async () => ({ success: true, data: true }),
+        setSyncAsMarkdown: async (enabled) => ({ success: true }),
         syncToMirror: async () => ({ success: true }),
 
         // AI Summary operations
@@ -217,6 +219,47 @@ test.describe('Data Mirror Feature', () => {
     // Check that a toast notification appeared
     const toast = await page.$('.toast');
     expect(toast).toBeTruthy();
+  });
+
+  test('Sync as Markdown toggle is visible and checked by default', async () => {
+    // Open settings modal
+    await page.click('#settingsBtn');
+    await page.waitForTimeout(200);
+
+    // Check that the Sync as Markdown toggle exists and is checked by default
+    const syncAsMarkdownToggle = await page.$('#syncAsMarkdownToggle');
+    expect(syncAsMarkdownToggle).toBeTruthy();
+    
+    const isChecked = await syncAsMarkdownToggle.isChecked();
+    expect(isChecked).toBe(true);
+  });
+
+  test('Sync as Markdown toggle can be toggled', async () => {
+    // Open settings modal
+    await page.click('#settingsBtn');
+    await page.waitForTimeout(200);
+
+    // Get the toggle and verify it's checked
+    const syncAsMarkdownToggle = await page.$('#syncAsMarkdownToggle');
+    let isChecked = await syncAsMarkdownToggle.isChecked();
+    expect(isChecked).toBe(true);
+
+    // Toggle it off by clicking the parent label
+    const toggleSwitch = await syncAsMarkdownToggle.evaluateHandle(el => el.parentElement);
+    await toggleSwitch.click();
+    await page.waitForTimeout(100);
+
+    // Verify it's now unchecked
+    isChecked = await syncAsMarkdownToggle.isChecked();
+    expect(isChecked).toBe(false);
+
+    // Toggle it back on
+    await toggleSwitch.click();
+    await page.waitForTimeout(100);
+
+    // Verify it's checked again
+    isChecked = await syncAsMarkdownToggle.isChecked();
+    expect(isChecked).toBe(true);
   });
 
   test('Toggling Data Mirror feature flag shows/hides section', async () => {

@@ -43,6 +43,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectMirrorDirectory: () => ipcRenderer.invoke('select-mirror-directory'),
   getMirrorDirectory: () => ipcRenderer.invoke('get-mirror-directory'),
   setMirrorDirectory: (mirrorDirectory) => ipcRenderer.invoke('set-mirror-directory', mirrorDirectory),
+  getSyncAsMarkdown: () => ipcRenderer.invoke('get-sync-as-markdown'),
+  setSyncAsMarkdown: (enabled) => ipcRenderer.invoke('set-sync-as-markdown', enabled),
   syncToMirror: () => ipcRenderer.invoke('sync-to-mirror'),
   
   // AI Summary operations

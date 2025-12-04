@@ -1052,6 +1052,18 @@
             </div>
             <p class="form-help">Select a directory to mirror all RSS data. Useful for integration with personal knowledge management tools like Obsidian.</p>
           </div>
+          <div class="form-group" style="margin-top: 16px;">
+            <div class="feature-flag-item">
+              <div class="feature-flag-info">
+                <div class="feature-flag-name">Sync as Markdown (.md)</div>
+                <div class="feature-flag-description">Convert data to Markdown files with Obsidian-compatible frontmatter properties instead of JSON</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="syncAsMarkdownToggle" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
           <div style="margin-top: 12px;">
             <button class="btn btn-secondary" id="syncNowBtn">Sync Now</button>
           </div>
@@ -1991,6 +2003,15 @@ Respond in JSON format:
             }
           }
         }
+        
+        // Load syncAsMarkdown setting (defaults to true)
+        if (window.electronAPI && window.electronAPI.getSyncAsMarkdown) {
+          const result = await window.electronAPI.getSyncAsMarkdown();
+          const syncAsMarkdownToggle = document.getElementById('syncAsMarkdownToggle');
+          if (syncAsMarkdownToggle) {
+            syncAsMarkdownToggle.checked = result.success ? result.data : true;
+          }
+        }
       } catch (error) {
         console.error('Error loading settings:', error);
       }
@@ -2067,6 +2088,15 @@ Respond in JSON format:
           const result = await window.electronAPI.setMirrorDirectory(mirrorDirectory);
           if (!result.success) {
             console.error('Failed to save mirror directory:', result.error);
+          }
+        }
+        
+        // Save syncAsMarkdown setting
+        const syncAsMarkdownToggle = document.getElementById('syncAsMarkdownToggle');
+        if (syncAsMarkdownToggle && window.electronAPI && window.electronAPI.setSyncAsMarkdown) {
+          const result = await window.electronAPI.setSyncAsMarkdown(syncAsMarkdownToggle.checked);
+          if (!result.success) {
+            console.error('Failed to save syncAsMarkdown setting:', result.error);
           }
         }
 
