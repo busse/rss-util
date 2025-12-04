@@ -47,6 +47,7 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 - **Automatic updates** - Background update checking and installation via electron-updater
 - **Data migration** - Automatic data structure migrations when updating to new versions
 - **Data persistence** - All feeds, articles, settings, and read states are stored locally
+- **Data Mirror** - Mirror all data to a second directory for integration with personal knowledge management tools like Obsidian (requires feature flag)
 
 ### Coming Soon
 - OPML import/export support
@@ -174,8 +175,27 @@ To configure your API key:
 The Settings area includes a feature flag system that allows you to enable or disable specific features:
 
 - **AI Article Summary**: Enable AI-powered article summaries
+- **Data Mirror**: Enable mirroring of all data to a second directory
 
 Feature flags can be toggled on or off using the toggle switches in the Settings modal. Changes are saved immediately when you click "Save".
+
+#### Data Mirror
+
+When the Data Mirror feature flag is enabled, a new section appears in Settings that allows you to:
+
+1. **Select a Mirror Directory**: Click "Browse..." to choose a directory where all RSS data will be mirrored
+2. **Clear Directory**: Click the "✕" button to clear the selected directory
+3. **Sync Now**: Manually trigger a sync of all data to the mirror directory
+
+The data is automatically synced to the mirror directory whenever any data changes (feeds, articles, read states, settings, etc.). This is useful for integration with personal knowledge management tools like Obsidian, Notion, or any other tool that can read JSON files.
+
+**Mirrored Files:**
+- `feeds.json` - Feed subscriptions
+- `categories.json` - Category/folder organization
+- `read-states.json` - Article read status
+- `settings.json` - Application settings
+- `ai-summaries.json` - AI-generated summaries (if enabled)
+- `articles-{feedId}.json` - Articles for each feed
 
 ### Feed Management
 

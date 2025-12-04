@@ -39,6 +39,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getFeatureFlags: () => ipcRenderer.invoke('get-feature-flags'),
   setFeatureFlag: (flagName, enabled) => ipcRenderer.invoke('set-feature-flag', flagName, enabled),
   
+  // Data Mirror operations
+  selectMirrorDirectory: () => ipcRenderer.invoke('select-mirror-directory'),
+  getMirrorDirectory: () => ipcRenderer.invoke('get-mirror-directory'),
+  setMirrorDirectory: (mirrorDirectory) => ipcRenderer.invoke('set-mirror-directory', mirrorDirectory),
+  syncToMirror: () => ipcRenderer.invoke('sync-to-mirror'),
+  
   // AI Summary operations
   readAISummary: (articleId) => ipcRenderer.invoke('read-ai-summary', articleId),
   writeAISummary: (articleId, summaryData) => ipcRenderer.invoke('write-ai-summary', articleId, summaryData),

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const crypto = require('crypto');
@@ -144,6 +144,8 @@ ipcMain.handle('write-json', async (event, filename, data) => {
   const filePath = path.join(dataDir, filename);
   try {
     await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error writing JSON file:', error);
@@ -170,6 +172,8 @@ ipcMain.handle('write-feeds', async (event, feeds) => {
   const filePath = path.join(dataDir, 'feeds.json');
   try {
     await fs.writeFile(filePath, JSON.stringify(feeds, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error writing feeds:', error);
@@ -196,6 +200,8 @@ ipcMain.handle('write-categories', async (event, categories) => {
   const filePath = path.join(dataDir, 'categories.json');
   try {
     await fs.writeFile(filePath, JSON.stringify(categories, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error writing categories:', error);
@@ -222,6 +228,8 @@ ipcMain.handle('write-read-states', async (event, readStates) => {
   const filePath = path.join(dataDir, 'read-states.json');
   try {
     await fs.writeFile(filePath, JSON.stringify(readStates, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error writing read states:', error);
@@ -248,6 +256,8 @@ ipcMain.handle('write-settings', async (event, settings) => {
   const filePath = path.join(dataDir, 'settings.json');
   try {
     await fs.writeFile(filePath, JSON.stringify(settings, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error writing settings:', error);
@@ -299,6 +309,8 @@ ipcMain.handle('set-encrypted-api-key', async (event, apiKey) => {
     }
     
     await fs.writeFile(filePath, JSON.stringify(settings, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error setting encrypted API key:', error);
@@ -326,6 +338,9 @@ ipcMain.handle('get-feature-flags', async (event) => {
     // Ensure default feature flags exist
     if (featureFlags.aiArticleSummary === undefined) {
       featureFlags.aiArticleSummary = false;
+    }
+    if (featureFlags.dataMirror === undefined) {
+      featureFlags.dataMirror = false;
     }
     
     return { success: true, data: featureFlags };
@@ -356,9 +371,144 @@ ipcMain.handle('set-feature-flag', async (event, flagName, enabled) => {
     settings.featureFlags[flagName] = enabled;
     
     await fs.writeFile(filePath, JSON.stringify(settings, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error setting feature flag:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Data Mirror operations
+ipcMain.handle('select-mirror-directory', async (event) => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Mirror Directory',
+      properties: ['openDirectory', 'createDirectory']
+    });
+    
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      return { success: true, data: null };
+    }
+    
+    return { success: true, data: result.filePaths[0] };
+  } catch (error) {
+    console.error('Error selecting mirror directory:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('get-mirror-directory', async (event) => {
+  try {
+    const filePath = path.join(dataDir, 'settings.json');
+    let settings = {};
+    
+    try {
+      const data = await fs.readFile(filePath, 'utf-8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    
+    return { success: true, data: settings.mirrorDirectory || null };
+  } catch (error) {
+    console.error('Error getting mirror directory:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('set-mirror-directory', async (event, mirrorDirectory) => {
+  try {
+    const filePath = path.join(dataDir, 'settings.json');
+    let settings = {};
+    
+    try {
+      const data = await fs.readFile(filePath, 'utf-8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    
+    if (mirrorDirectory) {
+      settings.mirrorDirectory = mirrorDirectory;
+    } else {
+      delete settings.mirrorDirectory;
+    }
+    
+    await fs.writeFile(filePath, JSON.stringify(settings, null, 2), 'utf-8');
+    // Trigger immediate sync if directory is set and feature is enabled
+    if (mirrorDirectory && settings.featureFlags?.dataMirror) {
+      syncToMirror().catch(err => console.error('Mirror sync error:', err));
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('Error setting mirror directory:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Helper function to sync data to mirror directory
+async function syncToMirror() {
+  try {
+    // Check if feature is enabled
+    const settingsPath = path.join(dataDir, 'settings.json');
+    let settings = {};
+    
+    try {
+      const data = await fs.readFile(settingsPath, 'utf-8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+      return; // No settings file, nothing to sync
+    }
+    
+    // Check if data mirror feature is enabled and directory is set
+    if (!settings.featureFlags?.dataMirror || !settings.mirrorDirectory) {
+      return;
+    }
+    
+    const mirrorDir = settings.mirrorDirectory;
+    
+    // Ensure mirror directory exists
+    await fs.mkdir(mirrorDir, { recursive: true });
+    
+    // Get all files in the data directory
+    const files = await fs.readdir(dataDir);
+    
+    // Copy each JSON file to mirror directory
+    for (const file of files) {
+      if (file.endsWith('.json')) {
+        const sourcePath = path.join(dataDir, file);
+        const destPath = path.join(mirrorDir, file);
+        
+        try {
+          const content = await fs.readFile(sourcePath, 'utf-8');
+          await fs.writeFile(destPath, content, 'utf-8');
+        } catch (error) {
+          console.error(`Error copying ${file} to mirror:`, error);
+        }
+      }
+    }
+    
+    console.log('Data synced to mirror directory:', mirrorDir);
+  } catch (error) {
+    console.error('Error syncing to mirror:', error);
+  }
+}
+
+ipcMain.handle('sync-to-mirror', async (event) => {
+  try {
+    await syncToMirror();
+    return { success: true };
+  } catch (error) {
+    console.error('Error syncing to mirror:', error);
     return { success: false, error: error.message };
   }
 });
@@ -392,6 +542,8 @@ ipcMain.handle('write-ai-summary', async (event, articleId, summaryData) => {
     
     summaries[articleId] = summaryData;
     await fs.writeFile(filePath, JSON.stringify(summaries, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error writing AI summary:', error);
@@ -488,6 +640,8 @@ ipcMain.handle('write-articles', async (event, feedId, articlesData) => {
       feedId: feedId
     };
     await fs.writeFile(filePath, JSON.stringify(dataToWrite, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    syncToMirror().catch(err => console.error('Mirror sync error:', err));
     return { success: true };
   } catch (error) {
     console.error('Error writing articles:', error);
