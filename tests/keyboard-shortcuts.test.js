@@ -61,8 +61,16 @@ test.describe('Keyboard Shortcuts', () => {
         setEncryptedApiKey: async (apiKey) => ({ success: true }),
 
         // Feature flags operations
-        getFeatureFlags: async () => ({ success: true, data: { aiArticleSummary: false } }),
+        getFeatureFlags: async () => ({ success: true, data: { aiArticleSummary: false, dataMirror: false } }),
         setFeatureFlag: async (flagName, enabled) => ({ success: true }),
+        
+        // Data Mirror operations
+        selectMirrorDirectory: async () => ({ success: true, data: null }),
+        getMirrorDirectory: async () => ({ success: true, data: null }),
+        setMirrorDirectory: async (mirrorDirectory) => ({ success: true }),
+        getSyncAsMarkdown: async () => ({ success: true, data: true }),
+        setSyncAsMarkdown: async (enabled) => ({ success: true }),
+        syncToMirror: async () => ({ success: true }),
 
         // AI Summary operations
         readAISummary: async (articleId) => ({ success: true, data: null }),

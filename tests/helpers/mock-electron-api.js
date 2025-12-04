@@ -84,7 +84,8 @@ function createMockElectronAPI() {
   const testReadStates = {};
   const testSettings = {
     featureFlags: {
-      aiArticleSummary: false
+      aiArticleSummary: false,
+      dataMirror: false
     }
   };
 
@@ -140,6 +141,14 @@ function createMockElectronAPI() {
       return { success: true, data: testSettings.featureFlags };
     },
     setFeatureFlag: async (flagName, enabled) => ({ success: true }),
+    
+    // Data Mirror operations
+    selectMirrorDirectory: async () => ({ success: true, data: null }),
+    getMirrorDirectory: async () => ({ success: true, data: null }),
+    setMirrorDirectory: async (mirrorDirectory) => ({ success: true }),
+    getSyncAsMarkdown: async () => ({ success: true, data: true }),
+    setSyncAsMarkdown: async (enabled) => ({ success: true }),
+    syncToMirror: async () => ({ success: true }),
 
     // AI Summary operations
     readAISummary: async (articleId) => ({ success: true, data: null }),

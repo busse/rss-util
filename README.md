@@ -35,6 +35,7 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 - **OpenAI API key management** - Secure, encrypted storage of API keys using AES-256-GCM
 - **Feature flags** - Toggle individual features on/off to customize your experience
 - **Settings modal** - Centralized configuration interface accessible from the sidebar
+- **Data Mirror with Markdown sync** - Mirror all RSS data to an external directory, with option to convert to Markdown files with Obsidian-compatible frontmatter
 
 ![Settings](screenshots/settings.png)
 
@@ -47,6 +48,7 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 - **Automatic updates** - Background update checking and installation via electron-updater
 - **Data migration** - Automatic data structure migrations when updating to new versions
 - **Data persistence** - All feeds, articles, settings, and read states are stored locally
+- **Data Mirror** - Mirror all data to a second directory for integration with personal knowledge management tools like Obsidian (requires feature flag)
 
 ### Coming Soon
 - OPML import/export support
@@ -174,8 +176,62 @@ To configure your API key:
 The Settings area includes a feature flag system that allows you to enable or disable specific features:
 
 - **AI Article Summary**: Enable AI-powered article summaries
+- **Data Mirror**: Enable mirroring of all data to a second directory
 
 Feature flags can be toggled on or off using the toggle switches in the Settings modal. Changes are saved immediately when you click "Save".
+
+#### Data Mirror
+
+When the Data Mirror feature flag is enabled, a new section appears in Settings that allows you to:
+
+1. **Select a Mirror Directory**: Click "Browse..." to choose a directory where all RSS data will be mirrored
+2. **Sync as Markdown** (enabled by default): Toggle to convert data to Markdown files with Obsidian-compatible frontmatter instead of raw JSON files
+3. **Clear Directory**: Click the "✕" button to clear the selected directory
+4. **Sync Now**: Manually trigger a sync of all data to the mirror directory
+
+The data is automatically synced to the mirror directory whenever any data changes (feeds, articles, read states, settings, etc.). This is useful for integration with personal knowledge management tools like Obsidian, Notion, or any other tool that can read Markdown or JSON files.
+
+**Note:** The "Sync as Markdown" option is enabled by default, providing a more readable and organized format for your mirrored data. You can disable it to mirror raw JSON files instead.
+
+**Sync as Markdown Mode (Default):**
+
+When "Sync as Markdown" is enabled (the default), the mirrored data is organized into a clean folder structure and converted to Markdown files with [Obsidian-compatible frontmatter properties](https://help.obsidian.md/properties):
+
+- `articles/{feed-name}/` - Individual article files, one per article, with full content and metadata
+- `feeds/` - Feed subscription files with URL, status, category, and update information
+- `categories/` - Category/folder definition files
+
+This format makes it easy to:
+- Browse and search articles in your knowledge management tool
+- Link between articles, feeds, and categories
+- Use Obsidian's graph view to visualize your reading patterns
+- Export or backup your RSS data in a human-readable format
+
+Each Markdown file includes YAML frontmatter with properties like:
+```yaml
+---
+title: "Article Title"
+link: "https://example.com/article"
+author: "Author Name"
+feed: "Feed Name"
+pubDate: "2024-01-15T10:30:00Z"
+read: true
+tags:
+  - "Technology"
+  - "News"
+type: article
+---
+```
+
+**JSON Mode:**
+
+When "Sync as Markdown" is disabled, the following JSON files are mirrored directly:
+- `feeds.json` - Feed subscriptions
+- `categories.json` - Category/folder organization
+- `read-states.json` - Article read status
+- `settings.json` - Application settings
+- `ai-summaries.json` - AI-generated summaries (if enabled)
+- `articles-{feedId}.json` - Articles for each feed
 
 ### Feed Management
 

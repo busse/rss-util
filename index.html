@@ -1041,6 +1041,33 @@
             <!-- Feature flags will be dynamically rendered here -->
           </div>
         </div>
+        <div class="settings-section" id="dataMirrorSection" style="display: none;">
+          <div class="settings-section-title">Data Mirror</div>
+          <div class="form-group">
+            <label class="form-label">Mirror Directory</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" class="form-input" id="mirrorDirectoryInput" readonly placeholder="No directory selected" style="flex: 1;">
+              <button class="btn btn-secondary" id="selectMirrorDirectoryBtn">Browse...</button>
+              <button class="btn btn-secondary" id="clearMirrorDirectoryBtn" title="Clear directory">✕</button>
+            </div>
+            <p class="form-help">Select a directory to mirror all RSS data. Useful for integration with personal knowledge management tools like Obsidian.</p>
+          </div>
+          <div class="form-group" style="margin-top: 16px;">
+            <div class="feature-flag-item">
+              <div class="feature-flag-info">
+                <div class="feature-flag-name">Sync as Markdown (.md)</div>
+                <div class="feature-flag-description">Convert data to Markdown files with Obsidian-compatible frontmatter properties instead of JSON</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="syncAsMarkdownToggle" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div style="margin-top: 12px;">
+            <button class="btn btn-secondary" id="syncNowBtn">Sync Now</button>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
@@ -1965,6 +1992,26 @@ Respond in JSON format:
             renderFeatureFlags(result.data);
           }
         }
+        
+        // Load mirror directory
+        if (window.electronAPI && window.electronAPI.getMirrorDirectory) {
+          const result = await window.electronAPI.getMirrorDirectory();
+          if (result.success && result.data) {
+            const mirrorInput = document.getElementById('mirrorDirectoryInput');
+            if (mirrorInput) {
+              mirrorInput.value = result.data;
+            }
+          }
+        }
+        
+        // Load syncAsMarkdown setting (defaults to true)
+        if (window.electronAPI && window.electronAPI.getSyncAsMarkdown) {
+          const result = await window.electronAPI.getSyncAsMarkdown();
+          const syncAsMarkdownToggle = document.getElementById('syncAsMarkdownToggle');
+          if (syncAsMarkdownToggle) {
+            syncAsMarkdownToggle.checked = result.success ? result.data : true;
+          }
+        }
       } catch (error) {
         console.error('Error loading settings:', error);
       }
@@ -1976,6 +2023,11 @@ Respond in JSON format:
           name: 'aiArticleSummary',
           label: 'AI Article Summary',
           description: 'Display AI-generated article summaries above the article preview (requires OpenAI API key)'
+        },
+        {
+          name: 'dataMirror',
+          label: 'Data Mirror',
+          description: 'Mirror all RSS data to a second directory for integration with external tools (e.g., Obsidian)'
         }
       ];
 
@@ -1994,6 +2046,12 @@ Respond in JSON format:
           </div>
         `;
       }).join('');
+      
+      // Show/hide data mirror section based on feature flag
+      const dataMirrorSection = document.getElementById('dataMirrorSection');
+      if (dataMirrorSection) {
+        dataMirrorSection.style.display = featureFlags.dataMirror ? 'block' : 'none';
+      }
     }
 
     async function saveSettings() {
@@ -2020,6 +2078,25 @@ Respond in JSON format:
             if (!result.success) {
               console.error(`Failed to save feature flag ${flagName}:`, result.error);
             }
+          }
+        }
+        
+        // Save mirror directory
+        const mirrorInput = document.getElementById('mirrorDirectoryInput');
+        if (mirrorInput && window.electronAPI && window.electronAPI.setMirrorDirectory) {
+          const mirrorDirectory = mirrorInput.value.trim() || null;
+          const result = await window.electronAPI.setMirrorDirectory(mirrorDirectory);
+          if (!result.success) {
+            console.error('Failed to save mirror directory:', result.error);
+          }
+        }
+        
+        // Save syncAsMarkdown setting
+        const syncAsMarkdownToggle = document.getElementById('syncAsMarkdownToggle');
+        if (syncAsMarkdownToggle && window.electronAPI && window.electronAPI.setSyncAsMarkdown) {
+          const result = await window.electronAPI.setSyncAsMarkdown(syncAsMarkdownToggle.checked);
+          if (!result.success) {
+            console.error('Failed to save syncAsMarkdown setting:', result.error);
           }
         }
 
@@ -2090,6 +2167,51 @@ Respond in JSON format:
     settingsModal.addEventListener('click', (e) => {
       if (e.target === settingsModal) {
         closeSettingsModal();
+      }
+    });
+    
+    // Data Mirror event handlers
+    document.getElementById('selectMirrorDirectoryBtn').addEventListener('click', async () => {
+      if (window.electronAPI && window.electronAPI.selectMirrorDirectory) {
+        try {
+          const result = await window.electronAPI.selectMirrorDirectory();
+          if (result.success && result.data) {
+            document.getElementById('mirrorDirectoryInput').value = result.data;
+          }
+        } catch (error) {
+          console.error('Error selecting mirror directory:', error);
+          showToast('Failed to select directory');
+        }
+      }
+    });
+    
+    document.getElementById('clearMirrorDirectoryBtn').addEventListener('click', () => {
+      document.getElementById('mirrorDirectoryInput').value = '';
+    });
+    
+    document.getElementById('syncNowBtn').addEventListener('click', async () => {
+      if (window.electronAPI && window.electronAPI.syncToMirror) {
+        try {
+          const result = await window.electronAPI.syncToMirror();
+          if (result.success) {
+            showToast('Data synced to mirror directory');
+          } else {
+            showToast('Sync failed: ' + (result.error || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Error syncing to mirror:', error);
+          showToast('Sync failed');
+        }
+      }
+    });
+    
+    // Listen for feature flag changes to show/hide data mirror section
+    featureFlagList.addEventListener('change', (e) => {
+      if (e.target.dataset.flagName === 'dataMirror') {
+        const dataMirrorSection = document.getElementById('dataMirrorSection');
+        if (dataMirrorSection) {
+          dataMirrorSection.style.display = e.target.checked ? 'block' : 'none';
+        }
       }
     });
 
