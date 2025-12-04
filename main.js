@@ -508,16 +508,33 @@ function triggerMirrorSync() {
   syncToMirror().catch(err => console.error('Mirror sync error:', err));
 }
 
-// Helper function to strip HTML tags and decode entities safely
+// Helper function to strip HTML tags and decode entities safely while preserving line breaks
 function stripHtml(html) {
   if (!html) return '';
-  // Repeatedly remove HTML tags until none remain (handles nested/malformed tags)
   let text = html;
+  
+  // Convert block-level elements to line breaks before removing tags
+  // Replace closing block tags with double newlines for paragraph breaks
+  text = text.replace(/<\/p>/gi, '\n\n');
+  text = text.replace(/<\/div>/gi, '\n\n');
+  text = text.replace(/<\/h[1-6]>/gi, '\n\n');
+  text = text.replace(/<\/li>/gi, '\n');
+  text = text.replace(/<\/tr>/gi, '\n');
+  text = text.replace(/<\/blockquote>/gi, '\n\n');
+  
+  // Replace <br> tags with single newlines
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  
+  // Replace <hr> with a line
+  text = text.replace(/<hr\s*\/?>/gi, '\n---\n');
+  
+  // Repeatedly remove remaining HTML tags until none remain (handles nested/malformed tags)
   let previous = '';
   while (previous !== text) {
     previous = text;
     text = text.replace(/<[^>]*>/g, '');
   }
+  
   // Decode common HTML entities (in correct order - &amp; last to avoid double-decoding)
   text = text.replace(/&lt;/g, '<');
   text = text.replace(/&gt;/g, '>');
@@ -525,8 +542,17 @@ function stripHtml(html) {
   text = text.replace(/&#39;/g, "'");
   text = text.replace(/&nbsp;/g, ' ');
   text = text.replace(/&amp;/g, '&');
-  // Normalize whitespace
-  text = text.replace(/\s+/g, ' ').trim();
+  
+  // Normalize multiple consecutive newlines to max 2 (paragraph break)
+  text = text.replace(/\n{3,}/g, '\n\n');
+  
+  // Normalize spaces within lines (but preserve newlines)
+  text = text.replace(/[^\S\n]+/g, ' ');
+  
+  // Trim each line and remove empty lines at start/end
+  text = text.split('\n').map(line => line.trim()).join('\n');
+  text = text.replace(/^\n+|\n+$/g, '');
+  
   return text;
 }
 
