@@ -35,6 +35,7 @@ A simple desktop RSS reader application for Mac built with Electron. The applica
 - **OpenAI API key management** - Secure, encrypted storage of API keys using AES-256-GCM
 - **Feature flags** - Toggle individual features on/off to customize your experience
 - **Settings modal** - Centralized configuration interface accessible from the sidebar
+- **Data Mirror with Markdown sync** - Mirror all RSS data to an external directory, with option to convert to Markdown files with Obsidian-compatible frontmatter
 
 ![Settings](screenshots/settings.png)
 
@@ -184,19 +185,27 @@ Feature flags can be toggled on or off using the toggle switches in the Settings
 When the Data Mirror feature flag is enabled, a new section appears in Settings that allows you to:
 
 1. **Select a Mirror Directory**: Click "Browse..." to choose a directory where all RSS data will be mirrored
-2. **Sync as Markdown**: Toggle to convert data to Markdown files with Obsidian-compatible frontmatter (enabled by default)
+2. **Sync as Markdown** (enabled by default): Toggle to convert data to Markdown files with Obsidian-compatible frontmatter instead of raw JSON files
 3. **Clear Directory**: Click the "✕" button to clear the selected directory
 4. **Sync Now**: Manually trigger a sync of all data to the mirror directory
 
 The data is automatically synced to the mirror directory whenever any data changes (feeds, articles, read states, settings, etc.). This is useful for integration with personal knowledge management tools like Obsidian, Notion, or any other tool that can read Markdown or JSON files.
 
+**Note:** The "Sync as Markdown" option is enabled by default, providing a more readable and organized format for your mirrored data. You can disable it to mirror raw JSON files instead.
+
 **Sync as Markdown Mode (Default):**
 
-When "Sync as Markdown" is enabled, the mirrored data is organized into folders and converted to Markdown files with [Obsidian-compatible frontmatter properties](https://help.obsidian.md/properties):
+When "Sync as Markdown" is enabled (the default), the mirrored data is organized into a clean folder structure and converted to Markdown files with [Obsidian-compatible frontmatter properties](https://help.obsidian.md/properties):
 
-- `articles/{feed-name}/` - Individual article files with title, link, author, pubDate, read status, and tags in frontmatter
-- `feeds/` - Feed subscription files with URL, status, and category info
-- `categories/` - Category/folder files
+- `articles/{feed-name}/` - Individual article files, one per article, with full content and metadata
+- `feeds/` - Feed subscription files with URL, status, category, and update information
+- `categories/` - Category/folder definition files
+
+This format makes it easy to:
+- Browse and search articles in your knowledge management tool
+- Link between articles, feeds, and categories
+- Use Obsidian's graph view to visualize your reading patterns
+- Export or backup your RSS data in a human-readable format
 
 Each Markdown file includes YAML frontmatter with properties like:
 ```yaml
