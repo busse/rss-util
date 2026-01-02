@@ -334,7 +334,7 @@ ipcMain.handle('get-feature-flags', async (event) => {
     }
     
     const featureFlags = settings.featureFlags || {};
-    
+
     // Ensure default feature flags exist
     if (featureFlags.aiArticleSummary === undefined) {
       featureFlags.aiArticleSummary = false;
@@ -342,7 +342,10 @@ ipcMain.handle('get-feature-flags', async (event) => {
     if (featureFlags.dataMirror === undefined) {
       featureFlags.dataMirror = false;
     }
-    
+    if (featureFlags.calendarExtraction === undefined) {
+      featureFlags.calendarExtraction = false;
+    }
+
     return { success: true, data: featureFlags };
   } catch (error) {
     console.error('Error getting feature flags:', error);
@@ -652,10 +655,63 @@ function categoryToMarkdown(category) {
   yaml += `icon: "${escapeYamlString(category.icon || '')}"\n`;
   yaml += `type: category\n`;
   yaml += '---\n\n';
-  
+
   let content = `# ${category.icon || '📁'} ${category.name || 'Untitled Category'}\n\n`;
   content += `This is a category/folder for organizing RSS feeds.\n`;
-  
+
+  return yaml + content;
+}
+
+// Helper function to convert calendar event to Markdown with Obsidian frontmatter
+function calendarEventToMarkdown(event) {
+  let yaml = '---\n';
+  yaml += `title: "${escapeYamlString(event.title || 'Untitled Event')}"\n`;
+  yaml += `startDate: "${escapeYamlString(event.startDate || '')}"\n`;
+  yaml += `endDate: "${escapeYamlString(event.endDate || '')}"\n`;
+  yaml += `isAllDay: ${event.isAllDay || false}\n`;
+  yaml += `location: "${escapeYamlString(event.location || '')}"\n`;
+  yaml += `confidence: "${escapeYamlString(event.confidence || 'medium')}"\n`;
+  yaml += `eventType: "${escapeYamlString(event.eventType || 'other')}"\n`;
+  yaml += `sourceArticle: "${escapeYamlString(event.sourceArticle?.title || '')}"\n`;
+  yaml += `sourceLink: "${escapeYamlString(event.sourceArticle?.link || '')}"\n`;
+  yaml += `sourceFeed: "${escapeYamlString(event.sourceArticle?.feedTitle || '')}"\n`;
+  yaml += `extractedAt: "${escapeYamlString(event.extractedAt || '')}"\n`;
+  yaml += `type: calendar-event\n`;
+  yaml += '---\n\n';
+
+  let content = `# 📅 ${event.title || 'Untitled Event'}\n\n`;
+
+  if (event.startDate) {
+    const dateStr = new Date(event.startDate).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    content += `**Date:** ${dateStr}\n\n`;
+  }
+
+  if (event.location) {
+    content += `**Location:** ${event.location}\n\n`;
+  }
+
+  if (event.description) {
+    content += `## Description\n\n${event.description}\n\n`;
+  }
+
+  content += `**Confidence:** ${event.confidence || 'medium'}\n`;
+  content += `**Event Type:** ${event.eventType || 'other'}\n\n`;
+
+  if (event.sourceArticle) {
+    content += `## Source\n\n`;
+    if (event.sourceArticle.link) {
+      content += `[${event.sourceArticle.title || 'Article'}](${event.sourceArticle.link})`;
+    } else {
+      content += event.sourceArticle.title || 'Unknown Article';
+    }
+    content += ` from ${event.sourceArticle.feedTitle || 'Unknown Feed'}\n`;
+  }
+
   return yaml + content;
 }
 
@@ -707,11 +763,13 @@ async function syncToMirror() {
       const articlesDir = path.join(mirrorDir, 'articles');
       const feedsDir = path.join(mirrorDir, 'feeds');
       const categoriesDir = path.join(mirrorDir, 'categories');
-      
+      const calendarDir = path.join(mirrorDir, 'calendar');
+
       await Promise.all([
         fs.mkdir(articlesDir, { recursive: true }),
         fs.mkdir(feedsDir, { recursive: true }),
-        fs.mkdir(categoriesDir, { recursive: true })
+        fs.mkdir(categoriesDir, { recursive: true }),
+        fs.mkdir(calendarDir, { recursive: true })
       ]);
       
       // Load read states for article metadata
@@ -768,7 +826,7 @@ async function syncToMirror() {
               const feedTitle = feed?.title || 'Unknown Feed';
               const feedFolder = path.join(articlesDir, sanitizeFilename(feedTitle));
               await fs.mkdir(feedFolder, { recursive: true });
-              
+
               const articlePromises = data.articles.map(async (article) => {
                 const readState = readStates[article.id];
                 const mdContent = articleToMarkdown(article, feedTitle, readState);
@@ -776,6 +834,25 @@ async function syncToMirror() {
                 await fs.writeFile(path.join(feedFolder, filename), mdContent, 'utf-8');
               });
               await Promise.all(articlePromises);
+            } else if (file === 'calendar-events.json' && data.events) {
+              // Convert each calendar event to a Markdown file organized by month
+              const eventPromises = data.events.map(async (event) => {
+                // Organize events by year-month folder
+                let monthFolder = 'no-date';
+                if (event.startDate) {
+                  const eventDate = new Date(event.startDate);
+                  const year = eventDate.getFullYear();
+                  const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+                  monthFolder = `${year}-${month}`;
+                }
+                const eventFolder = path.join(calendarDir, monthFolder);
+                await fs.mkdir(eventFolder, { recursive: true });
+
+                const mdContent = calendarEventToMarkdown(event);
+                const filename = sanitizeFilename(event.title || event.id) + '.md';
+                await fs.writeFile(path.join(eventFolder, filename), mdContent, 'utf-8');
+              });
+              await Promise.all(eventPromises);
             }
             // Skip other files like settings.json, read-states.json, ai-summaries.json in Markdown mode
           } catch (error) {
@@ -845,7 +922,7 @@ ipcMain.handle('write-ai-summary', async (event, articleId, summaryData) => {
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
-    
+
     summaries[articleId] = summaryData;
     await fs.writeFile(filePath, JSON.stringify(summaries, null, 2), 'utf-8');
     // Trigger mirror sync in background (don't await to avoid blocking)
@@ -853,6 +930,82 @@ ipcMain.handle('write-ai-summary', async (event, articleId, summaryData) => {
     return { success: true };
   } catch (error) {
     console.error('Error writing AI summary:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Calendar Events operations
+ipcMain.handle('read-calendar-events', async (event) => {
+  const filePath = path.join(dataDir, 'calendar-events.json');
+  try {
+    const data = await fs.readFile(filePath, 'utf-8');
+    return { success: true, data: JSON.parse(data) };
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return { success: true, data: { events: [], lastExtraction: null } };
+    }
+    console.error('Error reading calendar events:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('write-calendar-events', async (event, calendarData) => {
+  const filePath = path.join(dataDir, 'calendar-events.json');
+  try {
+    await fs.writeFile(filePath, JSON.stringify(calendarData, null, 2), 'utf-8');
+    // Trigger mirror sync in background (don't await to avoid blocking)
+    triggerMirrorSync();
+    return { success: true };
+  } catch (error) {
+    console.error('Error writing calendar events:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('delete-calendar-event', async (event, eventId) => {
+  const filePath = path.join(dataDir, 'calendar-events.json');
+  try {
+    let calendarData = { events: [], lastExtraction: null };
+    try {
+      const existingData = await fs.readFile(filePath, 'utf-8');
+      calendarData = JSON.parse(existingData);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+
+    calendarData.events = calendarData.events.filter(e => e.id !== eventId);
+    await fs.writeFile(filePath, JSON.stringify(calendarData, null, 2), 'utf-8');
+    triggerMirrorSync();
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting calendar event:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('clear-past-calendar-events', async (event) => {
+  const filePath = path.join(dataDir, 'calendar-events.json');
+  try {
+    let calendarData = { events: [], lastExtraction: null };
+    try {
+      const existingData = await fs.readFile(filePath, 'utf-8');
+      calendarData = JSON.parse(existingData);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+
+    const now = new Date();
+    calendarData.events = calendarData.events.filter(e => {
+      if (!e.startDate) return true; // Keep events without dates
+      const eventDate = new Date(e.startDate);
+      return eventDate >= now;
+    });
+
+    await fs.writeFile(filePath, JSON.stringify(calendarData, null, 2), 'utf-8');
+    triggerMirrorSync();
+    return { success: true };
+  } catch (error) {
+    console.error('Error clearing past calendar events:', error);
     return { success: false, error: error.message };
   }
 });
