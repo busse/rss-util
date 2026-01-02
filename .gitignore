@@ -24,3 +24,7 @@ Thumbs.db
 *.app
 *.exe
 *.msi
+
+# Test artifacts
+playwright-report/
+test-results/
