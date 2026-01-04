@@ -2753,24 +2753,32 @@ Respond in JSON format:
         const plainTextContent = tempDiv.textContent || tempDiv.innerText || '';
         const truncatedContent = plainTextContent.substring(0, 4000);
 
-        const currentDate = new Date().toISOString().split('T')[0];
+        // Use article publication date as reference, fall back to current date
+        const articleDate = article.pubDate ? new Date(article.pubDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        const articleYear = article.pubDate ? new Date(article.pubDate).getFullYear() : new Date().getFullYear();
 
         const prompt = `You are an expert at identifying events, deadlines, and dates mentioned in articles.
 Analyze the following article and extract ALL potential calendar events.
 
-Rules:
+CRITICAL DATE RULES:
+1. This article was published on ${articleDate}. Use this as your reference point for ALL date interpretations.
+2. When the article mentions a year explicitly (e.g., "2025", "2024"), use that exact year.
+3. When no year is specified but a month/day is given, use the year ${articleYear} (the article's publication year) unless context clearly indicates otherwise.
+4. For relative dates like "next week", "this Friday", "upcoming", calculate from the article's publication date (${articleDate}), NOT from today.
+5. If the article title or content contains a year (e.g., "February 2025 Recap"), events mentioned should use that year unless explicitly stated otherwise.
+
+Event Extraction Rules:
 1. Extract BOTH explicit events (specific dates/times) and implicit events (mentioned but less specific)
-2. For relative dates like "next week" or "this Friday", calculate from today's date: ${currentDate}
-3. Assign confidence levels:
+2. Assign confidence levels:
    - high: Specific date and time clearly stated
    - medium: Date mentioned but time unclear, or "early March" type references
    - low: Vague references like "coming soon", "later this year"
-4. Include ALL potential events - user will filter. Err on the side of inclusion.
-5. Categorize each event: conference, deadline, release, meeting, webinar, sale, holiday, other
+3. Include ALL potential events - user will filter. Err on the side of inclusion.
+4. Categorize each event: conference, deadline, release, meeting, webinar, sale, holiday, other
 
 Article Title: ${article.title || 'Untitled'}
 Source: ${article.feedTitle || 'Unknown'}
-Published: ${article.pubDate || 'Unknown'}
+Published: ${articleDate}
 
 Article Content:
 ${truncatedContent}
