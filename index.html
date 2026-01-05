@@ -884,6 +884,348 @@
     .toggle-switch input:focus + .toggle-slider {
       box-shadow: 0 0 1px #3498db;
     }
+
+    /* Calendar View Styles */
+    .calendar-section {
+      border-top: 1px solid #1a252f;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+
+    .calendar-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background-color 0.2s;
+    }
+
+    .calendar-item:hover {
+      background-color: #34495e;
+    }
+
+    .calendar-item.active {
+      background-color: #3498db;
+    }
+
+    .calendar-icon {
+      font-size: 16px;
+    }
+
+    .calendar-event-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .calendar-event-item:hover {
+      background-color: #f9f9f9;
+    }
+
+    .calendar-event-item.active {
+      background-color: #e8f4fc;
+      border-left: 3px solid #3498db;
+    }
+
+    .calendar-event-title {
+      font-size: 14px;
+      color: #2c3e50;
+      margin-bottom: 5px;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .calendar-event-meta {
+      font-size: 12px;
+      color: #95a5a6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .calendar-event-date {
+      color: #3498db;
+      font-weight: 500;
+    }
+
+    .confidence-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .confidence-high {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .confidence-medium {
+      background-color: #f39c12;
+      color: white;
+    }
+
+    .confidence-low {
+      background-color: #95a5a6;
+      color: white;
+    }
+
+    .calendar-group-header {
+      padding: 10px 20px;
+      background-color: #f5f5f5;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .calendar-detail-container {
+      padding: 30px;
+    }
+
+    .calendar-detail-header {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .calendar-detail-title {
+      font-size: 24px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      line-height: 1.3;
+    }
+
+    .calendar-detail-datetime {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: #3498db;
+      margin-bottom: 10px;
+    }
+
+    .calendar-detail-location {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-bottom: 10px;
+    }
+
+    .calendar-detail-source {
+      font-size: 14px;
+      color: #95a5a6;
+    }
+
+    .calendar-detail-source a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .calendar-detail-source a:hover {
+      text-decoration: underline;
+    }
+
+    .calendar-detail-body {
+      margin-bottom: 25px;
+    }
+
+    .calendar-detail-description {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #34495e;
+      margin-bottom: 20px;
+    }
+
+    .calendar-detail-confidence {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 15px;
+      background-color: #f9f9f9;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .calendar-detail-confidence-label {
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+
+    .calendar-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .calendar-actions-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    .calendar-btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      border: 1px solid #ddd;
+      background-color: white;
+      color: #2c3e50;
+    }
+
+    .calendar-btn:hover {
+      background-color: #f5f5f5;
+      border-color: #bbb;
+    }
+
+    .calendar-btn-google {
+      border-color: #4285f4;
+      color: #4285f4;
+    }
+
+    .calendar-btn-google:hover {
+      background-color: #4285f4;
+      color: white;
+    }
+
+    .calendar-btn-outlook {
+      border-color: #0078d4;
+      color: #0078d4;
+    }
+
+    .calendar-btn-outlook:hover {
+      background-color: #0078d4;
+      color: white;
+    }
+
+    .calendar-btn-ics {
+      border-color: #6c757d;
+      color: #6c757d;
+    }
+
+    .calendar-btn-ics:hover {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .calendar-secondary-actions {
+      display: flex;
+      gap: 10px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+
+    .calendar-btn-secondary {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      background-color: #f5f5f5;
+      color: #7f8c8d;
+      transition: all 0.2s;
+    }
+
+    .calendar-btn-secondary:hover {
+      background-color: #e8e8e8;
+      color: #2c3e50;
+    }
+
+    .calendar-btn-danger {
+      border-color: #e74c3c;
+      color: #e74c3c;
+    }
+
+    .calendar-btn-danger:hover {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .extract-events-btn {
+      background-color: #9b59b6;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .extract-events-btn:hover {
+      background-color: #8e44ad;
+    }
+
+    .extract-events-btn:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    .calendar-filter-bar {
+      padding: 10px 15px;
+      background-color: #f9f9f9;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .calendar-filter-select {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+      background-color: white;
+    }
+
+    .calendar-extract-all-btn {
+      margin-left: auto;
+      background-color: #3498db;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .calendar-extract-all-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .calendar-extract-all-btn:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 
@@ -915,6 +1257,14 @@
       <ul class="feed-list" id="folderList">
         <!-- Categories will be dynamically rendered here -->
       </ul>
+      <div class="calendar-section" id="calendarSection" style="display: none;">
+        <div class="section-title">Calendar</div>
+        <div class="calendar-item" id="calendarViewItem" data-view="calendar">
+          <span class="calendar-icon">📅</span>
+          <span class="feed-name">Events</span>
+          <span class="unread-count" id="calendarEventCount" style="display: none;">0</span>
+        </div>
+      </div>
     </div>
     <div class="sidebar-footer">
       <button class="about-btn" id="settingsBtn">
@@ -935,6 +1285,9 @@
   <main class="main-content">
     <div class="toolbar">
       <span class="toolbar-title" id="toolbarTitle">All Articles</span>
+      <button class="extract-events-btn" id="extractEventsBtn" title="Extract Calendar Events" style="display: none;">
+        <span>📅</span> Extract Events
+      </button>
       <button class="image-toggle-btn" id="toggleImagesBtn" title="Toggle Images">
         <img src="images/images_on_off.png" alt="Toggle Images">
       </button>
@@ -1087,6 +1440,12 @@
     let showImages = true;
     let isSidebarVisible = true;
     let featureFlags = {};
+
+    // Calendar State
+    let calendarEvents = [];
+    let selectedCalendarEventId = null;
+    let isCalendarViewActive = false;
+    let calendarConfidenceFilter = 'all'; // 'all', 'high', 'medium', 'low'
 
     // DOM Elements
     const sidebar = document.querySelector('.sidebar');
@@ -1645,6 +2004,11 @@ Respond in JSON format:
 
     // Event Handlers
     async function handleFeedSelection(feedId) {
+      // Deactivate calendar view if active
+      if (isCalendarViewActive) {
+        deactivateCalendarView();
+      }
+
       selectedFeedId = feedId;
       selectedArticleId = null;
 
@@ -1653,6 +2017,7 @@ Respond in JSON format:
       renderCategories();
       renderArticles();
       await renderArticlePreview(null);
+      updateExtractEventsButtonVisibility();
     }
 
     async function handleArticleSelection(articleId) {
@@ -1679,6 +2044,7 @@ Respond in JSON format:
 
         renderArticles();
         await renderArticlePreview(article);
+        updateExtractEventsButtonVisibility();
       }
     }
 
@@ -1830,6 +2196,42 @@ Respond in JSON format:
       updateImageToggleUI();
       showToast(showImages ? 'Images Visible' : 'Images Hidden');
     });
+
+    // Extract Events button handler
+    const extractEventsBtn = document.getElementById('extractEventsBtn');
+    extractEventsBtn.addEventListener('click', async () => {
+      if (!selectedArticleId) return;
+
+      const article = allArticles.find(a => a.id === selectedArticleId);
+      if (!article) return;
+
+      extractEventsBtn.disabled = true;
+      extractEventsBtn.innerHTML = '<span>⏳</span> Extracting...';
+
+      const result = await extractCalendarEventsFromArticle(article);
+
+      if (result.error) {
+        showToast(`Error: ${result.error}`);
+      } else if (result.events && result.events.length > 0) {
+        const added = addEventsToCalendar(result.events);
+        await saveCalendarEvents();
+        updateCalendarBadge();
+        showToast(`Found ${result.events.length} event(s), added ${added} new`);
+      } else {
+        showToast('No calendar events found in this article');
+      }
+
+      extractEventsBtn.disabled = false;
+      extractEventsBtn.innerHTML = '<span>📅</span> Extract Events';
+    });
+
+    // Update Extract Events button visibility
+    function updateExtractEventsButtonVisibility() {
+      if (extractEventsBtn) {
+        const shouldShow = featureFlags.calendarExtraction && selectedArticleId && !isCalendarViewActive;
+        extractEventsBtn.style.display = shouldShow ? 'flex' : 'none';
+      }
+    }
 
     function updateImageToggleUI() {
       if (showImages) {
@@ -2023,6 +2425,11 @@ Respond in JSON format:
           name: 'aiArticleSummary',
           label: 'AI Article Summary',
           description: 'Display AI-generated article summaries above the article preview (requires OpenAI API key)'
+        },
+        {
+          name: 'calendarExtraction',
+          label: 'Calendar Extraction',
+          description: 'Extract calendar events from articles using AI. Shows events in a dedicated Calendar view (requires OpenAI API key)'
         },
         {
           name: 'dataMirror',
@@ -2295,11 +2702,733 @@ Respond in JSON format:
       hideUpdateNotification();
     });
 
+    // Calendar Functions
+    async function loadCalendarEvents() {
+      try {
+        if (window.electronAPI && window.electronAPI.readCalendarEvents) {
+          const result = await window.electronAPI.readCalendarEvents();
+          if (result.success && result.data) {
+            calendarEvents = result.data.events || [];
+            // Sort by start date
+            calendarEvents.sort((a, b) => {
+              const dateA = a.startDate ? new Date(a.startDate) : new Date(9999, 0);
+              const dateB = b.startDate ? new Date(b.startDate) : new Date(9999, 0);
+              return dateA - dateB;
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading calendar events:', error);
+        calendarEvents = [];
+      }
+    }
+
+    async function saveCalendarEvents() {
+      try {
+        if (window.electronAPI && window.electronAPI.writeCalendarEvents) {
+          const data = {
+            events: calendarEvents,
+            lastExtraction: new Date().toISOString()
+          };
+          await window.electronAPI.writeCalendarEvents(data);
+        }
+      } catch (error) {
+        console.error('Error saving calendar events:', error);
+      }
+    }
+
+    // Extract calendar events from an article using OpenAI
+    async function extractCalendarEventsFromArticle(article) {
+      try {
+        // Get API key
+        const apiKeyResult = await window.electronAPI.getEncryptedApiKey();
+        if (!apiKeyResult.success || !apiKeyResult.data) {
+          return { error: 'No API key configured. Please add your OpenAI API key in Settings.' };
+        }
+        const apiKey = apiKeyResult.data;
+
+        // Prepare article content (strip HTML)
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = article.content || article.description || '';
+        const plainTextContent = tempDiv.textContent || tempDiv.innerText || '';
+        const truncatedContent = plainTextContent.substring(0, 4000);
+
+        // Use article publication date as reference, fall back to current date
+        const articleDate = article.pubDate ? new Date(article.pubDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        const articleYear = article.pubDate ? new Date(article.pubDate).getFullYear() : new Date().getFullYear();
+
+        const prompt = `You are an expert at identifying events, deadlines, and dates mentioned in articles.
+Analyze the following article and extract ALL potential calendar events.
+
+CRITICAL DATE RULES:
+1. This article was published on ${articleDate}. Use this as your reference point for ALL date interpretations.
+2. When the article mentions a year explicitly (e.g., "2025", "2024"), use that exact year.
+3. When no year is specified but a month/day is given, use the year ${articleYear} (the article's publication year) unless context clearly indicates otherwise.
+4. For relative dates like "next week", "this Friday", "upcoming", calculate from the article's publication date (${articleDate}), NOT from today.
+5. If the article title or content contains a year (e.g., "February 2025 Recap"), events mentioned should use that year unless explicitly stated otherwise.
+
+Event Extraction Rules:
+1. Extract BOTH explicit events (specific dates/times) and implicit events (mentioned but less specific)
+2. Assign confidence levels:
+   - high: Specific date and time clearly stated
+   - medium: Date mentioned but time unclear, or "early March" type references
+   - low: Vague references like "coming soon", "later this year"
+3. Include ALL potential events - user will filter. Err on the side of inclusion.
+4. Categorize each event: conference, deadline, release, meeting, webinar, sale, holiday, other
+
+Article Title: ${article.title || 'Untitled'}
+Source: ${article.feedTitle || 'Unknown'}
+Published: ${articleDate}
+
+Article Content:
+${truncatedContent}
+
+Return ONLY a JSON array (no markdown, no explanation):
+[
+  {
+    "title": "Event name",
+    "description": "Brief context from article",
+    "startDate": "ISO 8601 or null if unknown",
+    "endDate": "ISO 8601 or null",
+    "isAllDay": true/false,
+    "location": "Location or null",
+    "url": "Related URL or null",
+    "confidence": "high|medium|low",
+    "eventType": "conference|deadline|release|meeting|webinar|sale|holiday|other"
+  }
+]
+
+If no events found, return empty array: []`;
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.3,
+            max_tokens: 1500
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+
+        // Parse JSON response
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) {
+          return { events: [] };
+        }
+
+        const events = JSON.parse(jsonMatch[0]);
+
+        // Add metadata to each event
+        const enrichedEvents = events.map(event => ({
+          id: generateUUID(),
+          ...event,
+          articleId: article.id,
+          feedId: article.feedId,
+          extractedAt: new Date().toISOString(),
+          sourceArticle: {
+            title: article.title,
+            link: article.link,
+            feedTitle: article.feedTitle
+          }
+        }));
+
+        return { events: enrichedEvents };
+      } catch (error) {
+        console.error('Error extracting calendar events:', error);
+        return { error: error.message };
+      }
+    }
+
+    // Add extracted events to calendar (with deduplication)
+    function addEventsToCalendar(newEvents) {
+      const existingEventKeys = new Set(
+        calendarEvents.map(e => `${e.title}-${e.startDate}-${e.articleId}`)
+      );
+
+      let addedCount = 0;
+      for (const event of newEvents) {
+        const key = `${event.title}-${event.startDate}-${event.articleId}`;
+        if (!existingEventKeys.has(key)) {
+          calendarEvents.push(event);
+          existingEventKeys.add(key);
+          addedCount++;
+        }
+      }
+
+      // Re-sort by date
+      calendarEvents.sort((a, b) => {
+        const dateA = a.startDate ? new Date(a.startDate) : new Date(9999, 0);
+        const dateB = b.startDate ? new Date(b.startDate) : new Date(9999, 0);
+        return dateA - dateB;
+      });
+
+      return addedCount;
+    }
+
+    // Format event date for display
+    function formatEventDate(dateStr) {
+      if (!dateStr) return 'Date TBD';
+      try {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffDays = Math.floor((date - now) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Tomorrow';
+        if (diffDays > 1 && diffDays < 7) {
+          return date.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch (e) {
+        return 'Date TBD';
+      }
+    }
+
+    // Format event time for display
+    function formatEventTime(startDate, endDate, isAllDay) {
+      if (isAllDay) return 'All day';
+      if (!startDate) return '';
+
+      try {
+        const start = new Date(startDate);
+        const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+        if (endDate) {
+          const end = new Date(endDate);
+          const endTimeStr = end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+          return `${timeStr} - ${endTimeStr}`;
+        }
+
+        return timeStr;
+      } catch (e) {
+        return '';
+      }
+    }
+
+    // Group events by time period
+    function groupCalendarEvents(events) {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      const today = new Date(now);
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const nextWeek = new Date(now);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      const nextMonth = new Date(now);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+      const groups = {
+        today: [],
+        tomorrow: [],
+        thisWeek: [],
+        thisMonth: [],
+        later: [],
+        noDate: []
+      };
+
+      for (const event of events) {
+        if (!event.startDate) {
+          groups.noDate.push(event);
+          continue;
+        }
+
+        const eventDate = new Date(event.startDate);
+        eventDate.setHours(0, 0, 0, 0);
+
+        if (eventDate.getTime() === today.getTime()) {
+          groups.today.push(event);
+        } else if (eventDate.getTime() === tomorrow.getTime()) {
+          groups.tomorrow.push(event);
+        } else if (eventDate < nextWeek) {
+          groups.thisWeek.push(event);
+        } else if (eventDate < nextMonth) {
+          groups.thisMonth.push(event);
+        } else {
+          groups.later.push(event);
+        }
+      }
+
+      return groups;
+    }
+
+    // Generate Google Calendar URL
+    function generateGoogleCalendarUrl(event) {
+      const baseUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+      const params = new URLSearchParams();
+
+      params.set('text', event.title || 'Event');
+
+      if (event.startDate) {
+        const start = new Date(event.startDate);
+        const end = event.endDate ? new Date(event.endDate) : new Date(start.getTime() + 60 * 60 * 1000);
+
+        if (event.isAllDay) {
+          // All-day events use YYYYMMDD format
+          const startStr = start.toISOString().split('T')[0].replace(/-/g, '');
+          const endDate = new Date(end);
+          endDate.setDate(endDate.getDate() + 1);
+          const endStr = endDate.toISOString().split('T')[0].replace(/-/g, '');
+          params.set('dates', `${startStr}/${endStr}`);
+        } else {
+          // Timed events use full ISO format without special chars
+          const startStr = start.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+          const endStr = end.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+          params.set('dates', `${startStr}/${endStr}`);
+        }
+      }
+
+      if (event.description) {
+        let details = event.description;
+        if (event.sourceArticle && event.sourceArticle.link) {
+          details += `\n\nSource: ${event.sourceArticle.link}`;
+        }
+        params.set('details', details);
+      }
+
+      if (event.location) {
+        params.set('location', event.location);
+      }
+
+      return `${baseUrl}&${params.toString()}`;
+    }
+
+    // Generate Outlook Calendar URL
+    function generateOutlookCalendarUrl(event) {
+      const baseUrl = 'https://outlook.office.com/calendar/0/deeplink/compose';
+      const params = new URLSearchParams();
+
+      params.set('subject', event.title || 'Event');
+      params.set('path', '/calendar/action/compose');
+
+      if (event.startDate) {
+        params.set('startdt', event.startDate);
+        if (event.endDate) {
+          params.set('enddt', event.endDate);
+        }
+      }
+
+      if (event.description) {
+        let body = event.description;
+        if (event.sourceArticle && event.sourceArticle.link) {
+          body += `\n\nSource: ${event.sourceArticle.link}`;
+        }
+        params.set('body', body);
+      }
+
+      if (event.location) {
+        params.set('location', event.location);
+      }
+
+      if (event.isAllDay) {
+        params.set('allday', 'true');
+      }
+
+      return `${baseUrl}?${params.toString()}`;
+    }
+
+    // Generate ICS file content
+    function generateICSContent(event) {
+      const formatDate = (dateStr, isAllDay) => {
+        const date = new Date(dateStr);
+        if (isAllDay) {
+          return date.toISOString().split('T')[0].replace(/-/g, '');
+        }
+        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      };
+
+      const escapeICS = (str) => {
+        if (!str) return '';
+        return str.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
+      };
+
+      const start = event.startDate ? formatDate(event.startDate, event.isAllDay) : '';
+      const end = event.endDate
+        ? formatDate(event.endDate, event.isAllDay)
+        : (event.startDate ? formatDate(new Date(new Date(event.startDate).getTime() + 60 * 60 * 1000).toISOString(), event.isAllDay) : '');
+
+      let description = event.description || '';
+      if (event.sourceArticle && event.sourceArticle.link) {
+        description += `\n\nSource: ${event.sourceArticle.link}`;
+      }
+
+      const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//RSS Reader//Calendar Event//EN',
+        'BEGIN:VEVENT',
+        `UID:${event.id}@rss-reader`,
+        `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+        event.isAllDay ? `DTSTART;VALUE=DATE:${start}` : `DTSTART:${start}`,
+        event.isAllDay ? `DTEND;VALUE=DATE:${end}` : `DTEND:${end}`,
+        `SUMMARY:${escapeICS(event.title)}`,
+        description ? `DESCRIPTION:${escapeICS(description)}` : '',
+        event.location ? `LOCATION:${escapeICS(event.location)}` : '',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].filter(Boolean);
+
+      return lines.join('\r\n');
+    }
+
+    // Download ICS file
+    function downloadICS(event) {
+      const content = generateICSContent(event);
+      const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(event.title || 'event').replace(/[^a-z0-9]/gi, '_')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Render calendar events list
+    function renderCalendarEvents() {
+      const filteredEvents = calendarConfidenceFilter === 'all'
+        ? calendarEvents
+        : calendarEvents.filter(e => e.confidence === calendarConfidenceFilter);
+
+      // Filter out past events
+      const now = new Date();
+      const futureEvents = filteredEvents.filter(e => {
+        if (!e.startDate) return true;
+        return new Date(e.startDate) >= now;
+      });
+
+      if (futureEvents.length === 0) {
+        articleList.innerHTML = `
+          <div class="calendar-filter-bar">
+            <select class="calendar-filter-select" id="confidenceFilter">
+              <option value="all" ${calendarConfidenceFilter === 'all' ? 'selected' : ''}>All Confidence</option>
+              <option value="high" ${calendarConfidenceFilter === 'high' ? 'selected' : ''}>High Only</option>
+              <option value="medium" ${calendarConfidenceFilter === 'medium' ? 'selected' : ''}>Medium+</option>
+            </select>
+            <button class="calendar-extract-all-btn" id="extractAllBtn">
+              <span>🔍</span> Extract from All
+            </button>
+          </div>
+          <div class="empty-state">
+            <div class="empty-state-icon">📅</div>
+            <div class="empty-state-text">No upcoming events found</div>
+          </div>
+        `;
+        setupCalendarFilterListeners();
+        return;
+      }
+
+      const groups = groupCalendarEvents(futureEvents);
+      let html = `
+        <div class="calendar-filter-bar">
+          <select class="calendar-filter-select" id="confidenceFilter">
+            <option value="all" ${calendarConfidenceFilter === 'all' ? 'selected' : ''}>All Confidence</option>
+            <option value="high" ${calendarConfidenceFilter === 'high' ? 'selected' : ''}>High Only</option>
+            <option value="medium" ${calendarConfidenceFilter === 'medium' ? 'selected' : ''}>Medium+</option>
+          </select>
+          <button class="calendar-extract-all-btn" id="extractAllBtn">
+            <span>🔍</span> Extract from All
+          </button>
+        </div>
+      `;
+
+      const groupLabels = {
+        today: 'Today',
+        tomorrow: 'Tomorrow',
+        thisWeek: 'This Week',
+        thisMonth: 'This Month',
+        later: 'Later',
+        noDate: 'Date TBD'
+      };
+
+      for (const [groupKey, groupEvents] of Object.entries(groups)) {
+        if (groupEvents.length === 0) continue;
+
+        html += `<div class="calendar-group-header">${groupLabels[groupKey]}</div>`;
+
+        for (const event of groupEvents) {
+          const isActive = selectedCalendarEventId === event.id;
+          const dateDisplay = formatEventDate(event.startDate);
+
+          html += `
+            <div class="calendar-event-item ${isActive ? 'active' : ''}" data-event-id="${event.id}">
+              <div class="calendar-event-title">${escapeHtml(event.title || 'Untitled Event')}</div>
+              <div class="calendar-event-meta">
+                <span class="calendar-event-date">${dateDisplay}</span>
+                <span class="confidence-badge confidence-${event.confidence}">${event.confidence}</span>
+                <span>${escapeHtml(event.sourceArticle?.feedTitle || '')}</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      articleList.innerHTML = html;
+      setupCalendarFilterListeners();
+    }
+
+    function setupCalendarFilterListeners() {
+      const confidenceFilter = document.getElementById('confidenceFilter');
+      if (confidenceFilter) {
+        confidenceFilter.addEventListener('change', (e) => {
+          calendarConfidenceFilter = e.target.value;
+          renderCalendarEvents();
+        });
+      }
+
+      const extractAllBtn = document.getElementById('extractAllBtn');
+      if (extractAllBtn) {
+        extractAllBtn.addEventListener('click', handleExtractAllEvents);
+      }
+
+      // Event item click handlers
+      const eventItems = articleList.querySelectorAll('.calendar-event-item');
+      eventItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const eventId = item.dataset.eventId;
+          handleCalendarEventSelection(eventId);
+        });
+      });
+    }
+
+    // Render calendar event detail
+    function renderCalendarEventDetail(event) {
+      if (!event) {
+        articlePreview.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📅</div>
+            <div class="empty-state-text">Select an event to view details</div>
+          </div>
+        `;
+        return;
+      }
+
+      const dateDisplay = formatEventDate(event.startDate);
+      const timeDisplay = formatEventTime(event.startDate, event.endDate, event.isAllDay);
+      const googleUrl = generateGoogleCalendarUrl(event);
+      const outlookUrl = generateOutlookCalendarUrl(event);
+
+      articlePreview.innerHTML = `
+        <div class="calendar-detail-container">
+          <div class="calendar-detail-header">
+            <h1 class="calendar-detail-title">${escapeHtml(event.title || 'Untitled Event')}</h1>
+            <div class="calendar-detail-datetime">
+              <span>📅</span>
+              <span>${dateDisplay}${timeDisplay ? ' • ' + timeDisplay : ''}</span>
+            </div>
+            ${event.location ? `
+              <div class="calendar-detail-location">
+                <span>📍</span>
+                <span>${escapeHtml(event.location)}</span>
+              </div>
+            ` : ''}
+            <div class="calendar-detail-source">
+              Source: ${event.sourceArticle?.link
+                ? `<a href="${escapeHtml(event.sourceArticle.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(event.sourceArticle.title || 'Article')}</a>`
+                : escapeHtml(event.sourceArticle?.title || 'Unknown')}
+              (${escapeHtml(event.sourceArticle?.feedTitle || 'Unknown Feed')})
+            </div>
+          </div>
+
+          <div class="calendar-detail-body">
+            ${event.description ? `
+              <div class="calendar-detail-description">${escapeHtml(event.description)}</div>
+            ` : ''}
+
+            <div class="calendar-detail-confidence">
+              <span class="calendar-detail-confidence-label">Confidence:</span>
+              <span class="confidence-badge confidence-${event.confidence}">${event.confidence}</span>
+              <span style="color: #95a5a6; font-size: 13px;">
+                ${event.confidence === 'high' ? 'Specific date/time found in article' :
+                  event.confidence === 'medium' ? 'Date mentioned but details unclear' :
+                  'Vague reference to future event'}
+              </span>
+            </div>
+
+            <div class="calendar-actions">
+              <div class="calendar-actions-title">Add to Calendar</div>
+              <div class="calendar-btn-group">
+                <a href="${googleUrl}" target="_blank" rel="noopener noreferrer" class="calendar-btn calendar-btn-google">
+                  <span>📅</span> Google Calendar
+                </a>
+                <a href="${outlookUrl}" target="_blank" rel="noopener noreferrer" class="calendar-btn calendar-btn-outlook">
+                  <span>📅</span> Outlook
+                </a>
+                <button class="calendar-btn calendar-btn-ics" onclick="downloadICS(calendarEvents.find(e => e.id === '${event.id}'))">
+                  <span>⬇️</span> Download .ics
+                </button>
+              </div>
+            </div>
+
+            <div class="calendar-secondary-actions">
+              ${event.sourceArticle?.link ? `
+                <a href="${escapeHtml(event.sourceArticle.link)}" target="_blank" rel="noopener noreferrer" class="calendar-btn-secondary">
+                  View Source Article
+                </a>
+              ` : ''}
+              <button class="calendar-btn-secondary calendar-btn-danger" onclick="handleDismissEvent('${event.id}')">
+                Dismiss Event
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Handle calendar event selection
+    function handleCalendarEventSelection(eventId) {
+      selectedCalendarEventId = eventId;
+      const event = calendarEvents.find(e => e.id === eventId);
+      renderCalendarEvents();
+      renderCalendarEventDetail(event);
+    }
+
+    // Handle dismiss event
+    async function handleDismissEvent(eventId) {
+      calendarEvents = calendarEvents.filter(e => e.id !== eventId);
+      await saveCalendarEvents();
+
+      if (selectedCalendarEventId === eventId) {
+        selectedCalendarEventId = null;
+        renderCalendarEventDetail(null);
+      }
+
+      renderCalendarEvents();
+      updateCalendarBadge();
+      showToast('Event dismissed');
+    }
+
+    // Handle extract events from all articles
+    async function handleExtractAllEvents() {
+      const btn = document.getElementById('extractAllBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Extracting...';
+      }
+
+      let totalExtracted = 0;
+      let processed = 0;
+
+      for (const article of allArticles) {
+        processed++;
+        if (btn) {
+          btn.innerHTML = `<span>⏳</span> ${processed}/${allArticles.length}`;
+        }
+
+        const result = await extractCalendarEventsFromArticle(article);
+        if (result.events && result.events.length > 0) {
+          const added = addEventsToCalendar(result.events);
+          totalExtracted += added;
+        }
+
+        // Small delay to avoid rate limiting
+        await new Promise(r => setTimeout(r, 200));
+      }
+
+      await saveCalendarEvents();
+      renderCalendarEvents();
+      updateCalendarBadge();
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🔍</span> Extract from All';
+      }
+
+      showToast(`Extracted ${totalExtracted} new events from ${allArticles.length} articles`);
+    }
+
+    // Switch to calendar view
+    function activateCalendarView() {
+      isCalendarViewActive = true;
+      selectedFeedId = null;
+      selectedArticleId = null;
+      selectedCalendarEventId = null;
+
+      // Update sidebar
+      const feedItems = document.querySelectorAll('.feed-item');
+      feedItems.forEach(item => item.classList.remove('active'));
+
+      const calendarItem = document.getElementById('calendarViewItem');
+      if (calendarItem) {
+        calendarItem.classList.add('active');
+      }
+
+      toolbarTitle.textContent = 'Calendar Events';
+      updateExtractEventsButtonVisibility();
+      renderCalendarEvents();
+      renderCalendarEventDetail(null);
+    }
+
+    // Switch back to feed view
+    function deactivateCalendarView() {
+      isCalendarViewActive = false;
+      selectedCalendarEventId = null;
+
+      const calendarItem = document.getElementById('calendarViewItem');
+      if (calendarItem) {
+        calendarItem.classList.remove('active');
+      }
+    }
+
+    // Update calendar badge count
+    function updateCalendarBadge() {
+      const badge = document.getElementById('calendarEventCount');
+      const now = new Date();
+      const upcomingCount = calendarEvents.filter(e => {
+        if (!e.startDate) return true;
+        return new Date(e.startDate) >= now;
+      }).length;
+
+      if (badge) {
+        if (upcomingCount > 0) {
+          badge.textContent = upcomingCount;
+          badge.style.display = 'inline';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    }
+
+    // Update calendar section visibility
+    function updateCalendarSectionVisibility() {
+      const calendarSection = document.getElementById('calendarSection');
+      if (calendarSection) {
+        calendarSection.style.display = featureFlags.calendarExtraction ? 'block' : 'none';
+      }
+    }
+
+    // Calendar view click handler
+    document.getElementById('calendarViewItem')?.addEventListener('click', () => {
+      activateCalendarView();
+    });
+
     // Initialize application
     async function init() {
       await loadFeatureFlags(); // Load feature flags first
       await Promise.all([loadFeeds(), loadCategories(), loadReadStates()]);
       await loadAllArticles();
+
+      // Load calendar events if feature is enabled
+      if (featureFlags.calendarExtraction) {
+        await loadCalendarEvents();
+        updateCalendarBadge();
+      }
+      updateCalendarSectionVisibility();
 
       renderFeeds();
       renderCategories();

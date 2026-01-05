@@ -50,7 +50,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // AI Summary operations
   readAISummary: (articleId) => ipcRenderer.invoke('read-ai-summary', articleId),
   writeAISummary: (articleId, summaryData) => ipcRenderer.invoke('write-ai-summary', articleId, summaryData),
-  
+
+  // Calendar Events operations
+  readCalendarEvents: () => ipcRenderer.invoke('read-calendar-events'),
+  writeCalendarEvents: (calendarData) => ipcRenderer.invoke('write-calendar-events', calendarData),
+  deleteCalendarEvent: (eventId) => ipcRenderer.invoke('delete-calendar-event', eventId),
+  clearPastCalendarEvents: () => ipcRenderer.invoke('clear-past-calendar-events'),
+
   // RSS Feed operations
   fetchFeed: (url) => ipcRenderer.invoke('fetch-feed', url),
   
