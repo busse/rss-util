@@ -3,7 +3,6 @@ const path = require('path');
 const fs = require('fs').promises;
 const crypto = require('crypto');
 const Parser = require('rss-parser');
-const { autoUpdater } = require('electron-updater');
 const migrations = require('./migrations');
 
 let mainWindow;
@@ -1207,6 +1206,9 @@ async function fetchAllFeedsOnStartup() {
 
 // Auto-updater configuration
 function setupAutoUpdater() {
+  // Lazy load electron-updater after app is ready
+  const { autoUpdater } = require('electron-updater');
+  
   // Auto-updater is configured via package.json "publish" field
   // It will automatically use GitHub releases from the configured repository
   
@@ -1284,6 +1286,7 @@ function setupAutoUpdater() {
 // IPC handlers for update operations
 ipcMain.handle('check-for-updates', async () => {
   try {
+    const { autoUpdater } = require('electron-updater');
     await autoUpdater.checkForUpdates();
     return { success: true };
   } catch (error) {
@@ -1300,6 +1303,7 @@ ipcMain.handle('get-update-status', async () => {
 
 ipcMain.handle('install-update', async () => {
   try {
+    const { autoUpdater } = require('electron-updater');
     // Quit and install update
     autoUpdater.quitAndInstall(false, true);
     return { success: true };
